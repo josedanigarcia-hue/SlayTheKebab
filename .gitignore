@@ -1,0 +1,11 @@
+# Archivos compilados de Python
+__pycache__/
+
+# Archivos del ejecutable PyInstaller
+build/
+dist/
+*.spec
+*.exe
+
+# Base de datos de partidas guardadas
+saved_players.db
