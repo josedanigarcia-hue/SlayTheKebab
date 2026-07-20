@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Portada.png" alt="Portada de Slay the Papada" width="800">
+</p>
+
 # 🗡️ Slay the Papada
 *Un RPG clasico de terminal por turnos con mucho lore interno, bromas y amistad.*
 
