@@ -39,27 +39,27 @@ class Boss_1(Enemy):
         self.loot_artifacts = [ManoDeMidas(), BastonDeAghanim()]
         self.loot_artifact_chance = 100
         self.skills = [OracionEspectral(), EraTanFacil(), IsakAplasta()]
-        self.introduction = f"\n{C_BOSS}Isak_90{RESET}: {C_ENEMIGO}'¡Bienvenido a la mansion de casper! ¡Aqui se termina tu camino!'{RESET}"
+        self.introduction = f"\n{C_BOSS}{self.name}{RESET}: {C_ENEMIGO}'¡Bienvenido a la mansion de casper! ¡Aqui se termina tu camino!'{RESET}"
 
 class Boss_2(Enemy):
     def __init__(self):
-        super().__init__(name="Capitan Alansito", hp=550, hp_max=550, sp=500, sp_max=500, attack=35, defense=25, level=5, experience=800, gold=500)
+        super().__init__(name="Capitan Kirameki", hp=550, hp_max=550, sp=500, sp_max=500, attack=35, defense=25, level=5, experience=800, gold=500)
         self.is_boss = True
         self.loot_items = [MenuRolloMixto(), MenuFritaten()]
         self.loot_item_chance = 100
         self.loot_artifacts = [TartaShawarma(), TrajeZeta()]
         self.loot_artifact_chance = 100
         self.skills = [YameteKudasai(), ZokusheiShokan(), VoyASerElReyDeLosPiratas()]
-        self.introduction = f"\n{C_BOSS}Capitán Alansito{RESET}: {C_ENEMIGO}'Tienes valor para enfrentar al capitan BlackDicku, ¡muestrame hasta donde llega tu voluntad!'{RESET}"
+        self.introduction = f"\n{C_BOSS}{self.name}{RESET}: {C_ENEMIGO}'Tienes valor para enfrentar al capitan BlackDicku, ¡muestrame hasta donde llega tu voluntad!'{RESET}"
 
 class FinalBoss(Enemy):
     def __init__(self):
-        super().__init__(name="Pepeda", hp=1000, hp_max=1000, sp=700, sp_max=700, attack=50, defense=35, level=13, experience=2000, gold=1000)
+        super().__init__(name="Pepeda, El Sultan", hp=1000, hp_max=1000, sp=700, sp_max=700, attack=50, defense=35, level=13, experience=2000, gold=1000)
         self.is_boss = True
         self.loot_items = [MenuRolloMixto(), MenuFritaten()]
         self.loot_item_chance = 100
         self.loot_artifacts = [GranNispero(), FiguraStandCrazyDiamond()]
         self.loot_artifact_chance = 100
         self.skills = [PorlaPaz(), GiroFuego(), CabelloCejil(), LosMilYUnKebab()]
-        self.introduction = f"\n{C_BOSS}Pepeda, el sultan{RESET}: {C_ENEMIGO}'Conque tu eres quien que esta causando problemas en mis dominios, en el pasado eras como mi hermano, pero hoy no puedo dejarte continuar.¡Por la paz!'"
+        self.introduction = f"\n{C_BOSS}{self.name}{RESET}: {C_ENEMIGO}'Conque tu eres quien que esta causando problemas en mis dominios, en el pasado eras como mi hermano, pero hoy no puedo dejarte continuar.¡Por la paz!'"
     
