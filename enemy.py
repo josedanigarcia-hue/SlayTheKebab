@@ -54,7 +54,7 @@ class Boss_2(Enemy):
 
 class FinalBoss(Enemy):
     def __init__(self):
-        super().__init__(name="Pepeda, El Sultan", hp=1000, hp_max=1000, sp=700, sp_max=700, attack=50, defense=35, level=13, experience=2000, gold=1000)
+        super().__init__(name="Pepeda, El Sultan", hp=1000, hp_max=1000, sp=700, sp_max=700, attack=50, defense=35, level=13, experience=2000, gold=2000)
         self.is_boss = True
         self.loot_items = [MenuRolloMixto(), MenuFritaten()]
         self.loot_item_chance = 100
