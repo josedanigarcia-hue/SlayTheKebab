@@ -4,11 +4,12 @@ from ui import imprimir_texto, mostrar_titulo_gigante, C_HEROE, C_ENEMIGO, C_ART
 
 
 class Item:
-    def __init__(self, name, heal_hp=0, heal_sp=0, price=0):
+    def __init__(self, name, heal_hp=0, heal_sp=0, price=0, description=""):
         self.name = name
         self.heal_hp = heal_hp
         self.heal_sp = heal_sp
         self.price = price
+        self.description = description
 
     def use(self, player):
         player.heal(self.heal_hp)
@@ -17,7 +18,7 @@ class Item:
     
 class EstrellaLevante(Item):
     def __init__(self):
-        super().__init__(name="Quinto de Estrella", price=20)
+        super().__init__(name="Quinto de Estrella", price=20, description="Un quinto de la mejor cerveza murciana.\nRecupera 50% de SP.")
         
     def use(self, player):
         sp_amount = int(player.sp_max * 0.5)
@@ -26,16 +27,16 @@ class EstrellaLevante(Item):
     
 class Guldendraak(Item):
     def __init__(self):
-        super().__init__(name="Pinta de Gulden Draak", price=40)
+        super().__init__(name="Pinta de Gulden Draak", price=40, description="Una pinta de la cerveza mas potente.\nRecupera 100% de SP.")
 
     def use(self, player):
-        sp_amount = int(player.sp_max * 1)
+        sp_amount = int(player.sp_max)
         player.sp = min(player.sp + sp_amount, player.sp_max)
         return f"{C_HEROE}{player.name}{RESET} se bebe una {C_ITEM}{self.name}{RESET} y recupera {C_ARTIFACT}{sp_amount}{RESET} SP."
     
 class Fricandela(Item):
     def __init__(self):
-        super().__init__(name="Fricandela Especial", price=20)
+        super().__init__(name="Fricandela Especial", price=20, description="Una salchicha belga con un acompañamiento muy especial.\nRecupera 50% de HP.")
 
     def use(self, player):
         hp_amount = int(player.hp_max * 0.5)
@@ -44,16 +45,16 @@ class Fricandela(Item):
 
 class Mexicano(Item):
     def __init__(self):
-        super().__init__(name="Mexicano", price=40)
+        super().__init__(name="Mexicano", price=40, description="Un trozo de carne especiada, bueno que te cagas.\nRecupera 100% de HP.")
 
     def use(self, player):
-        hp_amount = int(player.hp_max * 1)
+        hp_amount = int(player.hp_max)
         player.heal(hp_amount)
         return f"{C_HEROE}{player.name}{RESET} se come un {C_ITEM}{self.name}{RESET} y recupera {C_ARTIFACT}{hp_amount}{RESET} HP."
 
 class MenuRolloMixto(Item):
     def __init__(self):
-        super().__init__(name="Menu de Rollo Mixto", price=70)
+        super().__init__(name="Menu de Rollo Mixto", price=70, description="Un delicioso menu rollo mixto con patatas y bebida\nRecupera 50% de HP y 50% de SP")
 
     def use(self, player):
         hp_amount = int(player.hp_max * 0.5)
@@ -64,12 +65,12 @@ class MenuRolloMixto(Item):
 
 class MenuFritaten(Item):
     def __init__(self):
-        super().__init__(name="Menu del Fritaten", price=100)
+        super().__init__(name="Menu del Fritaten", price=100, description="Un menu completo del Fritaten con patatas y bebida\nRecupera 100% de HP y 100% de SP")
 
     def use(self, player):
-        hp_amount = int(player.hp_max * 1)
+        hp_amount = int(player.hp_max)
         player.heal(hp_amount)
-        sp_amount = int(player.sp_max * 1)
+        sp_amount = int(player.sp_max)
         player.sp = min(player.sp + sp_amount, player.sp_max)
         return f"{C_HEROE}{player.name}{RESET} se toma un {C_ITEM}{self.name}{RESET} y recupera {C_ARTIFACT}{hp_amount}{RESET} HP y {C_ARTIFACT}{sp_amount}{RESET} SP."
 
