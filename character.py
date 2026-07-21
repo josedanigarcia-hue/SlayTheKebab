@@ -204,7 +204,7 @@ class Sami(Character):
     def __init__(self):
         super().__init__(name="Sami", char_class="Sami", hp=90, hp_max=90, sp=50, sp_max=50, attack=12, defense=6, level=1, experience=0)
         self.skills = [TeknoDiario(), TurraEterna(), BFG9000()]
-        self.inventory = [Fricandela(), EstrellaLevante(), Mexicano(), MenuRolloMixto(), MenuFritaten(), Guldendraak()]
+        self.inventory = [Fricandela()]
         self.artifacts = [BaflesDeSami()]
         self.chapter = 1
 
