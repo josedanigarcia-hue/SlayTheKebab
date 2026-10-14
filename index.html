@@ -1,0 +1,2864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slay the Kebab - Papadas Games</title>
+  <style>
+    :root {
+      --bg-dark: #0b0e14;
+      --bg-panel: #131822;
+      --bg-terminal: #080a0f;
+      --border-color: #2a3446;
+      --c-heroe: #4ade80;
+      --c-enemigo: #f87171;
+      --c-boss: #e879f9;
+      --c-skill: #22d3ee;
+      --c-item: #facc15;
+      --c-artifact: #60a5fa;
+      --c-sistema: #9ca3af;
+      --c-texto: #f3f4f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--c-texto);
+      font-family: 'Consolas', 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 20px);
+      background: var(--bg-panel);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Barra superior */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background: #1a2130;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brand {
+      font-weight: bold;
+      color: var(--c-boss);
+      letter-spacing: 1px;
+      font-size: 0.95rem;
+    }
+
+    .top-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-small {
+      background: #252f42;
+      color: var(--c-texto);
+      border: 1px solid #3b4963;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      transition: background 0.15s;
+    }
+
+    .btn-small:hover {
+      background: #32405a;
+    }
+
+    /* HUD de Estadísticas */
+    .hud-bar {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      padding: 8px 14px;
+      background: #10141d;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #262c3a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill-hp {
+      height: 100%;
+      background: var(--c-heroe);
+      transition: width 0.25s ease;
+    }
+
+    .bar-fill-sp {
+      height: 100%;
+      background: var(--c-artifact);
+      transition: width 0.25s ease;
+    }
+
+    /* Modal/Banner de Portada */
+    #cover-container {
+      display: none;
+      text-align: center;
+      background: #05070a;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      max-height: 260px;
+      overflow: hidden;
+    }
+
+    #cover-container img {
+      max-height: 240px;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    /* Pantalla de Terminal */
+    #terminal {
+      flex: 1;
+      background: var(--bg-terminal);
+      padding: 16px;
+      overflow-y: auto;
+      line-height: 1.5;
+      font-size: 0.96rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      cursor: pointer;
+    }
+
+    .ascii-art {
+      font-family: 'Consolas', 'Courier New', monospace;
+      line-height: 1.15;
+      font-size: clamp(0.45rem, 1.5vw, 0.85rem);
+      overflow-x: auto;
+      margin: 8px 0;
+      font-weight: bold;
+    }
+
+    .line {
+      margin-bottom: 4px;
+    }
+
+    /* Colores de ui.py */
+    .c-heroe { color: var(--c-heroe); font-weight: bold; }
+    .c-enemigo { color: var(--c-enemigo); font-weight: bold; }
+    .c-boss { color: var(--c-boss); font-weight: bold; }
+    .c-skill { color: var(--c-skill); }
+    .c-item { color: var(--c-item); }
+    .c-artifact { color: var(--c-artifact); }
+    .c-sistema { color: var(--c-sistema); }
+
+    /* Panel de Botones de Acción */
+    #controls {
+      padding: 12px 14px;
+      background: #151b26;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 64px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn {
+      background: #1f293d;
+      color: var(--c-texto);
+      border: 1px solid #3b4d71;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex: 1 1 calc(50% - 8px);
+      max-width: 440px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      background: #2c3b59;
+      border-color: var(--c-artifact);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .action-btn .key-badge {
+      background: #0e131d;
+      color: var(--c-item);
+      border: 1px solid #33415c;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .action-btn.btn-secret {
+      flex: 0 1 auto;
+      background: #181e2c;
+      border-style: dashed;
+      font-size: 0.82rem;
+      color: var(--c-sistema);
+    }
+
+    .hint-skip {
+      font-size: 0.75rem;
+      color: var(--c-sistema);
+    }
+
+    @media (max-width: 600px) {
+      .action-btn {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+      #terminal {
+        font-size: 0.88rem;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Barra superior -->
+  <div class="top-bar">
+    <div class="brand">🥙 SLAY THE KEBAB</div>
+    <div class="top-controls">
+      <span class="hint-skip" title="Haz clic en la consola o pulsa Espacio/Enter para acelerar el texto">⚡ Clic/Tecla = Saltar texto</span>
+      <button class="btn-small" id="btn-speed" onclick="toggleSpeed()">Velocidad: Normal</button>
+      <button class="btn-small" id="btn-cover" onclick="toggleCover()">🖼️ Portada</button>
+      <button class="btn-small" onclick="clearTerminal()">🧹 Limpiar log</button>
+    </div>
+  </div>
+
+  <!-- Imagen de Portada (se muestra si Portada.png está en la carpeta) -->
+  <div id="cover-container">
+    <img src="Portada.png" alt="Portada Slay the Kebab" onerror="document.getElementById('btn-cover').style.display='none'; this.parentElement.style.display='none';" />
+  </div>
+
+  <!-- HUD en tiempo real -->
+  <div class="hud-bar" id="hud">
+    <div class="hud-item">
+      <div><span id="hud-name" class="c-heroe">-</span> (Nv. <span id="hud-lvl" class="c-boss">1</span>)</div>
+      <div class="c-sistema">Cap. <span id="hud-chap">1</span> | Nodo: <span id="hud-node">n0</span></div>
+    </div>
+    <div class="hud-item">
+      <div>HP: <span id="hud-hp" class="c-artifact">0/0</span></div>
+      <div class="bar-bg"><div id="bar-hp" class="bar-fill-hp" style="width:100%"></div></div>
+    </div>
+    <div class="hud-item">
+      <div>SP: <span id="hud-sp" class="c-artifact">0/0</span></div>
+      <div class="bar-bg"><div id="bar-sp" class="bar-fill-sp" style="width:100%"></div></div>
+    </div>
+    <div class="hud-item">
+      <div>⚔️ ATQ: <span id="hud-atk" class="c-heroe">0</span> | 🛡️ DEF: <span id="hud-def" class="c-heroe">0</span></div>
+      <div>✨ EXP: <span id="hud-exp" class="c-skill">0</span> | 💰 ORO: <span id="hud-gold" class="c-item">0</span></div>
+    </div>
+  </div>
+
+  <!-- Consola de texto -->
+  <div id="terminal" onclick="skipTypewriter()"></div>
+
+  <!-- Botones de acción -->
+  <div id="controls"></div>
+</div>
+
+<script>
+/* =========================================================
+   1. SISTEMA DE UI, COLORES Y MÁQUINA DE ESCRIBIR (ui.py)
+   ========================================================= */
+const C_HEROE = "\x1b[HEROE]";
+const C_ENEMIGO = "\x1b[ENEMIGO]";
+const C_BOSS = "\x1b[BOSS]";
+const C_SKILL = "\x1b[SKILL]";
+const C_ITEM = "\x1b[ITEM]";
+const C_ARTIFACT = "\x1b[ARTIFACT]";
+const C_SISTEMA = "\x1b[SISTEMA]";
+const RESET = "\x1b[RESET]";
+
+const COLOR_CLASS_MAP = {
+  "\x1b[HEROE]": "c-heroe",
+  "\x1b[ENEMIGO]": "c-enemigo",
+  "\x1b[BOSS]": "c-boss",
+  "\x1b[SKILL]": "c-skill",
+  "\x1b[ITEM]": "c-item",
+  "\x1b[ARTIFACT]": "c-artifact",
+  "\x1b[SISTEMA]": "c-sistema"
+};
+
+const ASCII_BANNERS = {
+  "PAPADAS GAMES": `
+______  ___  ______  ___  ______   ___   _____   _____   ___  ___  ___ _____ _____ 
+| ___ \\/ _ \\ | ___ \\/ _ \\ |  _  \\ / _ \\ /  ___| |  __ \\ / _ \\ |  \\/  ||  ___/  ___|
+| |_/ / /_\\ \\| |_/ / /_\\ \\| | | |/ /_\\ \\\\ \`--.  | |  \\// /_\\ \\| .  . || |__ \\ \`--. 
+|  __/|  _  ||  __/|  _  || | | ||  _  | \`--. \\ | | __ |  _  || |\\/| ||  __| \`--. \\
+| |   | | | || |   | | | || |/ / | | | |/\\__/ / | |_\\ \\| | | || |  | || |___/\\__/ /
+\\_|   \\_| |_/\\_|   \\_| |_/|___/  \\_| |_/\\____/   \\____/\\_| |_/\\_|  |_/\\____/\\____/ `,
+  "Slay the Kebab": `
+ _____ _               _   _            _   __     _           _     
+/  ___| |             | | | |          | | / /    | |         | |    
+\\ \`--.| | __ _ _   _  | |_| |__   ___  | |/ /  ___| |__   __ _| |__  
+ \`--. \\ |/ _\` | | | | | __| '_ \\ / _ \\ |    \\ / _ \\ '_ \\ / _\` | '_ \\ 
+/\\__/ / | (_| | |_| | | |_| | | |  __/ | |\\  \\  __/ |_) | (_| | |_) |
+\\____/|_|\\__,_|\\__, |  \\__|_| |_|\\___| \\_| \\_/\\___|_.__/ \\__,_|_.__/ 
+                __/ |                                                
+               |___/                                                 `,
+  "EPILOGO": `
+   __________  ______   ____  __________ 
+  / ____/ __ \\/  _/ /  / __ \\/ ____/ __ \\
+ / __/ / /_/ // // /  / / / / / __/ / / /
+/ /___/ ____// // /__/ /_/ / /_/ / /_/ / 
+/_____/_/   /___/_____\\____/\\____/\\____/  `,
+  "Slay The Kebab": `
+   _____ __               ________          __ __     __          __  
+  / ___// /___ ___  __   /_  __/ /_  ___   / //_/__  / /_  ____ _/ /_ 
+  \\__ \\/ / __ \`/ / / /    / / / __ \\/ _ \\ / ,< / _ \\/ __ \\/ __ \`/ __ \\
+ ___/ / / /_/ / /_/ /    / / / / / /  __// /| /  __/ /_/ / /_/ / /_/ /
+/____/_/\\__,_/\\__, /    /_/ /_/ /_/\\___//_/ |_\\___/_.___/\\__,_/_.___/ 
+             /____/                                                   `
+};
+
+const terminalEl = document.getElementById("terminal");
+const controlsEl = document.getElementById("controls");
+
+let speedMultiplier = 1; // 1 = Normal, 0.25 = Rápido, 0 = Instantáneo
+let skipCurrentLine = false;
+let isTyping = false;
+let activeInputResolver = null;
+let currentButtonMap = {};
+
+function toggleSpeed() {
+  const btn = document.getElementById("btn-speed");
+  if (speedMultiplier === 1) {
+    speedMultiplier = 0.25;
+    btn.textContent = "Velocidad: Rápida";
+  } else if (speedMultiplier === 0.25) {
+    speedMultiplier = 0;
+    btn.textContent = "Velocidad: Instantánea";
+  } else {
+    speedMultiplier = 1;
+    btn.textContent = "Velocidad: Normal";
+  }
+}
+
+function toggleCover() {
+  const el = document.getElementById("cover-container");
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function clearTerminal() {
+  terminalEl.innerHTML = "";
+}
+
+function skipTypewriter() {
+  if (isTyping) {
+    skipCurrentLine = true;
+  }
+}
+
+window.addEventListener("keydown", (e) => {
+  if (isTyping) {
+    skipCurrentLine = true;
+    return;
+  }
+  if (activeInputResolver && currentButtonMap[e.key] !== undefined) {
+    e.preventDefault();
+    const val = currentButtonMap[e.key];
+    resolveChoice(val);
+  }
+});
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function imprimir_texto(texto, velocidad = 0.02) {
+  if (texto === null || texto === undefined) return;
+  const str = String(texto);
+  const lineDiv = document.createElement("div");
+  lineDiv.className = "line";
+  terminalEl.appendChild(lineDiv);
+
+  const regex = /(\x1b\[[A-Z]+\])/g;
+  const partes = str.split(regex);
+
+  let currentSpan = document.createElement("span");
+  lineDiv.appendChild(currentSpan);
+
+  isTyping = true;
+  skipCurrentLine = false;
+
+  for (const parte of partes) {
+    if (!parte) continue;
+    if (parte.startsWith("\x1b[")) {
+      if (parte === RESET) {
+        currentSpan = document.createElement("span");
+        lineDiv.appendChild(currentSpan);
+      } else {
+        const cls = COLOR_CLASS_MAP[parte];
+        currentSpan = document.createElement("span");
+        if (cls) currentSpan.className = cls;
+        lineDiv.appendChild(currentSpan);
+      }
+    } else {
+      const delayMs = velocidad * 1000 * speedMultiplier;
+      if (delayMs <= 0 || skipCurrentLine) {
+        currentSpan.textContent += parte;
+      } else {
+        for (const letra of parte) {
+          currentSpan.textContent += letra;
+          terminalEl.scrollTop = terminalEl.scrollHeight;
+          if (!skipCurrentLine) {
+            await sleep(delayMs);
+          }
+        }
+      }
+    }
+  }
+
+  isTyping = false;
+  terminalEl.scrollTop = terminalEl.scrollHeight;
+}
+
+function mostrar_titulo_gigante(texto, colorCode = C_SISTEMA) {
+  const pre = document.createElement("pre");
+  const cls = COLOR_CLASS_MAP[colorCode] || "";
+  pre.className = `ascii-art ${cls}`;
+  pre.textContent = ASCII_BANNERS[texto] || `=== ${texto} ===`;
+  terminalEl.appendChild(pre);
+  terminalEl.scrollTop = terminalEl.scrollHeight;
+}
+
+function printDivider() {
+  const div = document.createElement("div");
+  div.className = "line c-sistema";
+  div.textContent = "=".repeat(60);
+  terminalEl.appendChild(div);
+  terminalEl.scrollTop = terminalEl.scrollHeight;
+}
+
+function stripTags(str) {
+  return String(str).replace(/\x1b\[[A-Z]+\]/g, "");
+}
+
+function resolveChoice(value) {
+  if (!activeInputResolver) return;
+  const resolver = activeInputResolver;
+  activeInputResolver = null;
+  currentButtonMap = {};
+  controlsEl.innerHTML = "";
+  resolver(String(value));
+}
+
+function askOptions(options, allowSecretCode = false) {
+  updateHUD();
+  return new Promise((resolve) => {
+    activeInputResolver = resolve;
+    controlsEl.innerHTML = "";
+    currentButtonMap = {};
+
+    options.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.className = "action-btn";
+      if (opt.key !== undefined) {
+        currentButtonMap[String(opt.key)] = opt.value;
+        const badge = document.createElement("span");
+        badge.className = "key-badge";
+        badge.textContent = opt.key;
+        btn.appendChild(badge);
+      }
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = stripTags(opt.label);
+      btn.appendChild(labelSpan);
+      btn.onclick = () => resolveChoice(opt.value);
+      controlsEl.appendChild(btn);
+    });
+
+    if (allowSecretCode) {
+      const secretBtn = document.createElement("button");
+      secretBtn.className = "action-btn btn-secret";
+      secretBtn.innerHTML = `<span class="key-badge">🔑</span><span>Código Secreto</span>`;
+      secretBtn.onclick = () => {
+        const code = prompt("Ingresa el código secreto:");
+        if (code !== null && code.trim() !== "") {
+          resolveChoice(code.trim());
+        }
+      };
+      controlsEl.appendChild(secretBtn);
+    }
+  });
+}
+
+/* =========================================================
+   2. UTILIDADES ALEATORIAS E INVENTARIO (inventory_utils.py)
+   ========================================================= */
+function randint(min, max) {
+  const a = Math.trunc(min);
+  const b = Math.max(a, Math.trunc(max));
+  return Math.floor(Math.random() * (b - a + 1)) + a;
+}
+
+function choice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function weightedChoice(items, weights) {
+  const total = weights.reduce((acc, w) => acc + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    if (r < weights[i]) return items[i];
+    r -= weights[i];
+  }
+  return items[items.length - 1];
+}
+
+function sample(arr, k) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.min(k, copy.length));
+}
+
+function summarize_inventory(items) {
+  const counts = new Map();
+  for (const item of items) {
+    counts.set(item.name, (counts.get(item.name) || 0) + 1);
+  }
+  return Array.from(counts.entries());
+}
+
+function get_item_by_display_index(items, choiceIdx) {
+  const grouped = summarize_inventory(items);
+  if (choiceIdx < 1 || choiceIdx > grouped.length) return null;
+  const selectedName = grouped[choiceIdx - 1][0];
+  return items.find(it => it.name === selectedName) || null;
+}
+
+/* =========================================================
+   3. HABILIDADES (skills.py)
+   ========================================================= */
+class Skill {
+  constructor({
+    name, sp_cost, cooldown, level_required,
+    is_passive = false, passive_once = false, used_once = false,
+    hp_threshold = 1.0, priority = 0, requires_buff = null
+  }) {
+    this.name = name;
+    this.sp_cost = sp_cost;
+    this.cooldown = cooldown;
+    this.level_required = level_required;
+    this.is_passive = is_passive;
+    this.passive_once = passive_once;
+    this.passive_triggered = false;
+    this.last_used = -cooldown;
+    this.used_once = used_once;
+    this.skill_triggered = false;
+    this.hp_threshold = hp_threshold;
+    this.priority = priority;
+    this.requires_buff = requires_buff;
+  }
+
+  can_use(character, current_turn) {
+    const sp_ok = character.sp >= this.sp_cost;
+    const level_ok = character.level >= this.level_required;
+    const cooldown_ok = (current_turn - this.last_used) >= this.cooldown;
+    return sp_ok && level_ok && cooldown_ok;
+  }
+
+  get_status_label(current_turn, character) {
+    if (!this.can_use(character, current_turn)) {
+      const turns_left = this.cooldown - (current_turn - this.last_used);
+      if (turns_left <= 0 && character.sp < this.sp_cost) {
+        return `${C_ENEMIGO}Falta SP${RESET}`;
+      }
+      if (turns_left <= 1) {
+        return "1 turno restante";
+      }
+      return `${C_ENEMIGO}${turns_left} turnos restantes${RESET}`;
+    }
+    return "Disponible";
+  }
+
+  passive_effect(user, target) {
+    return null;
+  }
+}
+
+class DisparoDeBalin extends Skill {
+  constructor() { super({ name: "Disparo de Balín", sp_cost: 20, cooldown: 3, level_required: 1 }); }
+  effect(user, target) {
+    const damage = Math.max(0, Math.trunc(user.attack * 2.5 - target.defense));
+    target.take_damage(damage);
+    return `¡${C_HEROE}${user.name}${RESET} dispara un balín a ${C_ENEMIGO}${target.name}${RESET} y hace ${C_ARTIFACT}${damage}${RESET} de daño!`;
+  }
+}
+
+class GiroHipnotico extends Skill {
+  constructor() { super({ name: "Giro Hipnótico", sp_cost: 40, cooldown: 5, level_required: 5 }); }
+  effect(user, target) {
+    const damage = Math.max(0, Math.trunc(target.attack * 3 - target.defense));
+    target.take_damage(damage);
+    target.lose_turn = true;
+    return `¡${C_HEROE}${user.name}${RESET} realiza un giro hipnótico con un final remangandose y ${C_ENEMIGO}${target.name}${RESET} intenta imitarlo pero sufre ${C_ARTIFACT}${damage}${RESET} de daño y pierde el turno!\n${C_ENEMIGO}${target.name}${RESET}: '¡Haces que parezca facil!'`;
+  }
+}
+
+class OllaExplosiva extends Skill {
+  constructor() { super({ name: "Olla Explosiva", sp_cost: 50, cooldown: 4, level_required: 10 }); }
+  effect(user, target) {
+    const damage = Math.max(0, randint(Math.trunc(user.attack * 6), Math.trunc(user.attack * 8) - target.defense));
+    target.take_damage(damage);
+    const frase = choice(['¡Ha sido una explosion incendiaria!', '¿Estaba llena de cerveza?', '¿Eso son garbanzos? Joder, que hambre']);
+    return `¡${C_HEROE}${user.name}${RESET} lanza una olla explosiva a ${C_ENEMIGO}${target.name}${RESET} y hace ${C_ARTIFACT}${damage}${RESET} de daño!\n${frase}`;
+  }
+}
+
+class VozConfusa extends Skill {
+  constructor() { super({ name: "Voz Confusa", sp_cost: 0, cooldown: 0, level_required: 1, is_passive: true }); }
+  passive_effect(user, target) {
+    if (weightedChoice([true, false], [30, 70])) {
+      target.lose_turn = true;
+      target.defense = Math.trunc(target.defense * 0.5);
+      return `${C_SKILL}¡Voz Confusa!${RESET} ${C_ENEMIGO}${target.name}${RESET} pierde el turno y su defensa es reducida a la mitad.\n${C_ENEMIGO}${target.name}${RESET}: '¿No decias que solo habria hombres?'`;
+    }
+    return null;
+  }
+}
+
+class RecitalMarxista extends Skill {
+  constructor() { super({ name: "Recital Marxista", sp_cost: 30, cooldown: 4, level_required: 4 }); }
+  effect(user, target) {
+    const damage = randint(Math.trunc(user.attack * 3.5), Math.trunc(user.attack * 5));
+    target.take_damage(damage);
+    return `¡${C_HEROE}${user.name}${RESET} recita parrafo a parrafo en ruso el manifiesto comunista blandiendo una hoz y martillo contra ${C_ENEMIGO}${target.name}${RESET} y provoca ${C_ARTIFACT}${damage}${RESET} de daño!`;
+  }
+}
+
+class SiestaMaldita extends Skill {
+  constructor() { super({ name: "Siesta Maldita", sp_cost: 50, cooldown: 5, level_required: 8 }); }
+  effect(user, target) {
+    const heal_amount = randint(Math.trunc(user.hp_max * 0.5), Math.trunc(user.hp_max * 0.8));
+    user.heal(heal_amount);
+    if (target.lose_turn) {
+      const damage = randint(Math.trunc(target.attack * 3.5), Math.trunc(target.attack * 4.5));
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} se echa una siesta maldita y recupera ${C_ARTIFACT}${heal_amount}${RESET} de HP!\n¡${C_ENEMIGO}${target.name}${RESET} cayo en la siesta maldita, pero no supo controlar su poder y se hizo daño a si mismo! ¡${C_ARTIFACT}${damage}${RESET} de daño!`;
+    }
+    return `¡${C_HEROE}${user.name}${RESET} se echa una siesta maldita y recupera ${C_ARTIFACT}${heal_amount}${RESET} de HP!`;
+  }
+}
+
+class InvocacionNatural extends Skill {
+  constructor() { super({ name: "Gatcha Invocación", sp_cost: 10, cooldown: 2, level_required: 1 }); }
+  effect(user, target) {
+    const eff = weightedChoice(["ardilla", "colega", "elefante"], [25, 50, 25]);
+    if (eff === "ardilla") {
+      const heal_amount = randint(Math.trunc(user.hp_max * 0.1), Math.trunc(user.hp_max * 0.3));
+      user.heal(heal_amount);
+      return `¡${C_HEROE}${user.name}${RESET} invoca a una ardilla que le entrega una manzana dorada y recupera ${C_ARTIFACT}${heal_amount}${RESET} de HP!`;
+    } else if (eff === "colega") {
+      const damage = randint(Math.trunc(user.attack * 2.5), Math.trunc(user.attack * 3.5));
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} invoca a su fiel perro Colega que ataca a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${damage}${RESET} de daño!`;
+    } else {
+      const damage = randint(Math.trunc(user.attack * 5), Math.trunc(user.attack * 6));
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} invoca a un Doble Elefante Telepata de Guerra que arrolla a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${damage}${RESET} de daño!`;
+    }
+  }
+}
+
+class SustanciasPeligrosas extends Skill {
+  constructor() { super({ name: "Sustancias Peligrosas", sp_cost: 20, cooldown: 3, level_required: 5 }); }
+  effect(user, target) {
+    const amount = randint(Math.trunc(user.attack * 3), Math.trunc(user.attack * 5));
+    const heal = Math.trunc(amount / 2);
+    user.heal(heal);
+    target.take_damage(amount);
+    const extra = choice(['¡Eso huele fatal!', '¿Que es eso? ¿Cristal? ¿Veneno? ¡¿Sangre?!', '¡Espero que sea mayonesa!']);
+    return `¡${C_HEROE}${user.name}${RESET} prepara un brebaje con sustancias de dudosa procedenciay se lo bebe, recupera ${C_ARTIFACT}${heal}${RESET} de HP y arroja lo que queda a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${amount}${RESET} de daño!\n${extra}`;
+  }
+}
+
+class MeriendaCenaMedieval extends Skill {
+  constructor() { super({ name: "MeriendaCena 40K", sp_cost: 40, cooldown: 4, level_required: 10 }); }
+  effect(user, target) {
+    const damage = choice([
+      Math.trunc(user.attack * 5),
+      Math.trunc(user.attack * 6),
+      Math.trunc(user.attack * 7),
+      Math.trunc(user.attack * 8),
+      Math.trunc(user.attack * 40000)
+    ]);
+    target.take_damage(damage);
+    const extra = choice(['¡Eso es un exterminatus!', 'Eso no es una morcilla de burgos', '¡¿donde esta mi brazo?!', '¡¿Ese es un dios del caos?!']);
+    return `¡${C_HEROE}${user.name}${RESET} invoca a todas las razas del universo de Warhammer 40K para darse un festin, tras la comida todos entran en un frenesi de violencia y atacan a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${damage}${RESET} de daño!\n${extra}`;
+  }
+}
+
+class TeknoDiario extends Skill {
+  constructor() { super({ name: "Tekno Diario", sp_cost: 0, cooldown: 0, level_required: 1, is_passive: true, passive_once: true }); }
+  passive_effect(user, target) {
+    user.attack += (user.level * 2);
+    user.defense += (user.level * 2);
+    return `¡${C_HEROE}${user.name}${RESET} pone su temazo diario y se siente más fuerte! Ataque y defensa aumentados en ${C_ARTIFACT}${user.level * 2}${RESET} puntos cada uno.`;
+  }
+}
+
+class TurraEterna extends Skill {
+  constructor() { super({ name: "Turra Eterna", sp_cost: 25, cooldown: 2, level_required: 4 }); }
+  effect(user, target) {
+    const damage = Math.max(0, randint(Math.trunc(user.attack * 3.5), Math.trunc(user.attack * 5.5) - target.defense));
+    target.take_damage(damage);
+    const extra = choice(['¡¿Quien cojones es Hardcore Schwarzenegger!?', '¡¿Cuantas veces has repetido eso?!', '¡¿Por qué no te callas?!']);
+    return `¡${C_HEROE}${user.name}${RESET} suelta una turra eterna y destroza mentalmente a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${damage}${RESET} de daño!\n${extra}`;
+  }
+}
+
+class BFG9000 extends Skill {
+  constructor() { super({ name: "BFG 9000", sp_cost: 150, cooldown: 5, level_required: 8 }); }
+  effect(user, target) {
+    const damage = Math.max(0, Math.trunc(user.attack * 8 - target.defense));
+    target.take_damage(damage);
+    return `¡${C_HEROE}${user.name}${RESET} utiliza el ${C_ARTIFACT}BFG 9000${RESET} y destruye a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ARTIFACT}${damage}${RESET} de daño!`;
+  }
+}
+
+class HallDeLaFama extends Skill {
+  constructor() { super({ name: "Hall de la Fama", sp_cost: 20, cooldown: 1, level_required: 0 }); }
+  effect(user, target) {
+    const pokeball = choice(["Pokeball", "Superball", "Ultraball", "Masterball"]);
+    if (pokeball === "Pokeball") {
+      let damage = randint(Math.trunc(user.attack * 1.5), Math.trunc(user.attack * 2.5) - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} lanza una ${C_ENEMIGO}Pokeball${RESET} frente a ${C_ENEMIGO}${target.name}${RESET} y aparece Espeon usando Psiquico, causando ${C_ENEMIGO}${damage}${RESET} de daño!`;
+    } else if (pokeball === "Superball") {
+      let damage = randint(Math.trunc(user.attack * 2.5), Math.trunc(user.attack * 3.5) - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} lanza una ${C_SKILL}Superball${RESET} frente a ${C_ENEMIGO}${target.name}${RESET} y aparece Feraligatr usando Hidrobomba, causando ${C_ENEMIGO}${damage}${RESET} de daño!`;
+    } else if (pokeball === "Ultraball") {
+      let damage = randint(Math.trunc(user.attack * 3.5), Math.trunc(user.attack * 4.5) - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} lanza una ${C_ITEM}Ultraball${RESET} frente a ${C_ENEMIGO}${target.name}${RESET} y aparece Dragonite usando Hiper Rayo, causando ${C_ENEMIGO}${damage}${RESET} de daño!`;
+    } else {
+      let damage = randint(Math.trunc(user.attack * 4.5), Math.trunc(user.attack * 5.5) - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_HEROE}${user.name}${RESET} lanza una ${C_BOSS}Masterball${RESET} frente a ${C_ENEMIGO}${target.name}${RESET} y aparece Rayquaza usando Cometa Draco, causando ${C_ENEMIGO}${damage}${RESET} de daño!`;
+    }
+  }
+}
+
+class CorteBienFiludo extends Skill {
+  constructor() { super({ name: "Corte Bien Filudo", sp_cost: 40, cooldown: 3, level_required: 7 }); }
+  effect(user, target) {
+    let damage = randint(Math.trunc(user.attack * 4), Math.trunc(user.attack * 6) - target.defense);
+    if (damage < 1) damage = 0;
+    target.take_damage(damage);
+    user.attack += 10;
+    return `¡${C_HEROE}${user.name}${RESET} saca unas tijeras bien filudas y le hace un nuevo corte de pelo a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ENEMIGO}${damage}${RESET} de daño!\nCuanto mas se usan las tijeras, mas filudas estan y su ataque aumenta en 10 puntos.`;
+  }
+}
+
+class MadreDeGatos extends Skill {
+  constructor() { super({ name: "Madre de Gatos", sp_cost: 50, cooldown: 5, level_required: 10 }); }
+  effect(user, target) {
+    let damage = randint(Math.trunc(user.attack * 7), Math.trunc(user.attack * 10) - target.defense);
+    if (damage < 1) damage = 0;
+    target.take_damage(damage);
+    return `¡${C_HEROE}${user.name}${RESET} llama a sus fieles gatos, Ragnar y Darwin, y ellos masacran a ${C_ENEMIGO}${target.name}${RESET} causando ${C_ENEMIGO}${damage}${RESET} de daño!\n¡MIAAAAAUUUUUUUU!`;
+  }
+}
+
+// Skills de Enemigos y Artefactos
+class OracionEspectral extends Skill {
+  constructor() { super({ name: "Cuñadismo Espectral", sp_cost: 20, cooldown: 4, level_required: 1, hp_threshold: 1.0, priority: 0 }); }
+  effect(user, target) {
+    let damage = Math.trunc(user.attack * 1.5 - target.defense);
+    if (damage < 1) damage = 0;
+    target.take_damage(damage);
+    const success = choice([true, false]);
+    target.lose_turn = success;
+    if (target.lose_turn) {
+      return `¡${C_ENEMIGO}${user.name}${RESET} usa ${C_BOSS}Cuñadismo Espectral${RESET}!\n¡${C_ENEMIGO}${user.name}${RESET} recita un frason de lo mas cuñado y fantasma, haciendo ${C_ARTIFACT}${damage}${RESET} de daño a ${C_HEROE}${target.name}${RESET}.\nAdemas, ${C_HEROE}${target.name}${RESET} ha quedado tan impactado necesita un turno para recuperarse.`;
+    }
+    return `¡${C_ENEMIGO}${user.name}${RESET} usa ${C_BOSS}Cuñadismo Espectral${RESET}!\n¡${C_ENEMIGO}${user.name}${RESET} recita un frason de lo mas cuñado y fantasma, haciendo ${C_ARTIFACT}${damage}${RESET} de daño a ${C_HEROE}${target.name}${RESET}.`;
+  }
+}
+
+class EraTanFacil extends Skill {
+  constructor() { super({ name: "Era Tan Facil", sp_cost: 40, cooldown: 4, level_required: 2, hp_threshold: 0.75, priority: 1 }); }
+  effect(user, target) {
+    const eff = choice(["1", "1", "1", "2", "2", "3"]);
+    if (eff === "1") {
+      let damage = randint(Math.trunc(user.attack * 2) - target.defense, Math.trunc(user.attack * 3) - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_ENEMIGO}${user.name}${RESET} grita ${C_BOSS}ERA TAN FACIL${RESET}!\nTras ello invoca a sniper que carga su rifle y dispara causando ${C_ARTIFACT}${damage}${RESET} de daño a ${C_HEROE}${target.name}${RESET}.`;
+    } else if (eff === "2") {
+      const meepos = randint(1, 6);
+      let damage = Math.trunc(user.attack * meepos - target.defense);
+      if (damage < 1) damage = 0;
+      target.take_damage(damage);
+      return `¡${C_ENEMIGO}${user.name}${RESET} grita ${C_BOSS}ERA TAN FACIL${RESET}!\nTras ello invoca ${meepos} meepo(s) que captura con sus redes a ${C_HEROE}${target.name}${RESET} y tras un baile explosivo le causa ${C_ARTIFACT}${damage}${RESET} de daño a ${C_HEROE}${target.name}${RESET}.`;
+    } else {
+      return `¡${C_ENEMIGO}${user.name}${RESET} grita ${C_BOSS}ERA TAN FACIL${RESET}!\nTras ello invoca a Antimage pero ignora el combate y se queda farmeando la linea`;
+    }
+  }
+}
+
+class IsakAplasta extends Skill {
+  constructor() { super({ name: "Isak Aplasta", sp_cost: 80, cooldown: 8, level_required: 3, hp_threshold: 0.5, priority: 2, used_once: true }); }
+  effect(user, target) {
+    let damage = Math.trunc(user.attack * 4 - target.defense);
+    if (damage < 1) damage = 0;
+    target.take_damage(damage);
+    user.lose_turn = true;
+    return `${C_ENEMIGO}${user.name}${RESET}: Te voy a enseñar mi tecnica definitiva, heredada del maestro de batalla Hualk\n${C_ENEMIGO}${user.name}${RESET} levanta sus brazos y sus manos, de por si grandes, empiezan a crecer desmesuradamente\n${C_ENEMIGO}${user.name}${RESET} cierra los puños y golpea el suelo gritando: ${C_BOSS}¡ISAK SMASH!${RESET}\nEl choque provoca una explosion que deja un crater en la estancia y provoca ${C_ARTIFACT}${damage}${RESET} de daño a ${C_HEROE}${target.name}${RESET}.`;
+  }
+}
+
+class YameteKudasai extends Skill {
+  constructor() { super({ name: "Yamete Kudasai", sp_cost: 35, cooldown: 5, level_required: 1, hp_threshold: 1.0, priority: 0 }); }
+  effect(user, target) {
+    target.lose_turn = true;
+    const eff = choice(["hp", "sp"]);
+    if (eff === "hp") {
+      user.heal(50);
+      return `¡${C_ENEMIGO}${user.name}${RESET} gime diciendo ${C_BOSS}'¡¡¡YAMETE KUDASAI!!!'${RESET}\nEsto aturde a ${C_HEROE}${target.name}${RESET} perdiendo su siguiente turno.\n${C_ENEMIGO}${user.name}${RESET} recupera 50 puntos de vida.`;
+    } else {
+      user.sp = Math.min(user.sp + 30, user.sp_max);
+      return `¡${C_ENEMIGO}${user.name}${RESET} gime diciendo ${C_BOSS}'¡¡¡YAMETE KUDASAI!!!'${RESET}\nEsto aturde a ${C_HEROE}${target.name}${RESET} perdiendo su siguiente turno.\n${C_ENEMIGO}${user.name}${RESET} recupera 50 puntos de mana.`;
+    }
+  }
+}
+
+class ZokusheiShokan extends Skill {
+  constructor() { super({ name: "Zousheki Shōkan", sp_cost: 55, cooldown: 5, level_required: 1, hp_threshold: 0.75, priority: 1 }); }
+  effect(user, target) {
+    const eff = choice(["JuicioFinal", "Meteoro", "Thor", "Boreal"]);
+    if (eff === "JuicioFinal") return this.juicio_final(user, target);
+    if (eff === "Meteoro") return this.meteoro(user, target);
+    if (eff === "Thor") return this.thor(user, target);
+    return this.boreal(user, target);
+  }
+  juicio_final(user, target) {
+    let damage = Math.trunc(user.attack * 5 - target.defense);
+    if (damage < 1) damage = 0;
+    target.take_damage(damage);
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita '${C_BOSS}Zousheki Shōkan: Juicio Final${RESET}' y aparecen a su alrededor decenas de djinn de Tierra!\n¡Los djinn de tierra se unen y mandan su energia al cielo!\n¡${C_ENEMIGO}${user.name}${RESET} alza el brazo, sonrie y al levantar la mirada ve a una especie de angel con una cabeza de leon en el brazo cargando un rayo que cae directamente sobre ${C_HEROE}${target.name}${RESET}\n${C_HEROE}${target.name}${RESET} recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño.`;
+  }
+  meteoro(user, target) {
+    let d1 = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    let d2 = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    let d3 = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    target.take_damage(d1 + d2 + d3);
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita '${C_BOSS}Zousheki Shōkan: Meteoro${RESET}' y aparecen a su alrededor decenas de djinn de fuego!\n¡Los djinn de fuego se unen y mandan su energia al cielo!\n¡${C_ENEMIGO}${user.name}${RESET} alza el brazo, sonrie y al levantar la mirada ve un meteorito gigante acompañado de otros mas pequeños que caen sobre ${C_HEROE}${target.name}${RESET}\n${C_HEROE}${target.name}${RESET} recibe daño de varios meteoritos: ${C_ARTIFACT}${d1}${RESET} + ${C_ARTIFACT}${d2}${RESET} + ${C_ARTIFACT}${d3}${RESET} puntos de daño.`;
+  }
+  thor(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    target.take_damage(damage);
+    user.heal(100);
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita '${C_BOSS}Zousheki Shōkan: Thor${RESET}' y aparecen a su alrededor decenas de djinn de viento!\n¡Los djinn de viento se unen y mandan su energia al cielo!\n¡${C_ENEMIGO}${user.name}${RESET} alza el brazo, sonrie y al levantar la mirada ve como de una runa en el cielo cae el dios Thor, saca su mjolnir y lanza descargas electricas a todos lados\n${C_HEROE}${target.name}${RESET} recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño.\n${C_ENEMIGO}${user.name}${RESET} recibe algunas descargas, pero lo fortalecen.\n${C_ENEMIGO}${user.name}${RESET} recupera 100 de hp.`;
+  }
+  boreal(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    target.take_damage(damage);
+    user.sp = Math.min(user.sp + 50, user.sp_max);
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita '${C_BOSS}Zousheki Shōkan: Boreal${RESET}' y aparecen a su alrededor decenas de djinn de agua!\n¡Los djinn de agua se unen y mandan su energia al cielo!\n¡${C_ENEMIGO}${user.name}${RESET} alza el brazo, sonrie y al levantar la mirada ve... ¿una picadora de hielo?\n${C_HEROE}${target.name}${RESET} acaba congelado y recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño.\n${C_ENEMIGO}${user.name}${RESET} aprovecha el hielo para prepararse una copa\n${C_ENEMIGO}${user.name}${RESET} recupera 50 de sp`;
+  }
+}
+
+class VoyASerElReyDeLosPiratas extends Skill {
+  constructor() { super({ name: "Kaizoku ou ni ore wa naru!", sp_cost: 100, cooldown: 8, level_required: 1, hp_threshold: 0.50, priority: 2 }); }
+  effect(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 5 - target.defense));
+    target.take_damage(damage);
+    user.attack += 10;
+    user.defense += 10;
+    return `¡${C_ENEMIGO}${user.name}${RESET} cierra un momento los ojos mientras aparecen rayos negros a su alrededor. El aire de la sala se vuelve muy pesado\nTe mira desafiante y grita '${C_BOSS}¡Kaizoku ou ni ore wa naru!${RESET}' mientras concentra el haki del rey en su puño y se lanza contra ti\n${C_HEROE}${target.name}${RESET} sale volando y recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño.`;
+  }
+}
+
+class PorlaPaz extends Skill {
+  constructor() { super({ name: "Por la paz", sp_cost: 15, cooldown: 10, level_required: 1, hp_threshold: 1.0, priority: 0 }); }
+  effect(user, target) {
+    if (user.is_boss) {
+      user.heal(200);
+      user.active_buffs.add("Por_la_paz");
+      return `¡${C_ENEMIGO}${user.name}${RESET} grita: ${C_SKILL}¡Por la paz!${RESET} y se bebe de un trago un chupito de tequila ranchitos\n${C_ENEMIGO}${user.name}${RESET} recupera ${C_HEROE}200${RESET} de hp`;
+    } else {
+      user.heal(50);
+      return `${C_HEROE}${user.name}${RESET} grita: ${C_SKILL}¡Por la paz!${RESET} y se bebe de un trago un chupito de tequila ranchitos\n${C_HEROE}${user.name}${RESET} recupera ${C_HEROE}50${RESET} de hp`;
+    }
+  }
+}
+
+class GiroFuego extends Skill {
+  constructor() { super({ name: "Giro de fuego", sp_cost: 50, cooldown: 3, level_required: 1, hp_threshold: 1.0, priority: 0, requires_buff: "Por_la_paz" }); }
+  effect(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 2 - target.defense));
+    target.take_damage(damage);
+    return `¡${C_ENEMIGO}${user.name}${RESET} comienzan a brotar llamas de su boca y ano lo que le hace girar rápidamente y formar un torbellino de fuego que se lanza sobre ti!\n${C_HEROE}${target.name}${RESET} recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño\n${C_ENEMIGO}${user.name}${RESET}: ${C_BOSS}'No deberia haberme bebido ese chupito de ranchitos...'${RESET}`;
+  }
+}
+
+class CabelloCejil extends Skill {
+  constructor() { super({ name: "Por el Poder del Cabello Cejil", sp_cost: 80, cooldown: 4, level_required: 1, hp_threshold: 0.75, priority: 1, requires_buff: "Por_la_paz" }); }
+  effect(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 3 - target.defense));
+    target.take_damage(damage);
+    user.attack += 5;
+    user.defense += 5;
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita: ${C_BOSS}'Por el Poder del Cabello Cejil'${RESET} y sus cejas comienzan a crecer y algunos pelos, como latigos, salen disparados en direccion a ${C_HEROE}${target.name}${RESET}.\n${C_HEROE}${target.name}${RESET} recibe ${C_ARTIFACT}${damage}${RESET} puntos de daño\n${C_ENEMIGO}${user.name}${RESET} tiene las cejas mas robustas, lo que mejora su fuerza y defensa en 5 puntos.`;
+  }
+}
+
+class LosMilYUnKebab extends Skill {
+  constructor() { super({ name: "Los Mil y Un Kebab", sp_cost: 150, cooldown: 5, level_required: 1, hp_threshold: 0.50, priority: 2, requires_buff: "Por_la_paz" }); }
+  effect(user, target) {
+    let damage = Math.max(0, Math.trunc(user.attack * 5 - target.defense));
+    target.take_damage(damage);
+    user.heal(100);
+    return `¡${C_ENEMIGO}${user.name}${RESET} grita: ${C_BOSS}'Los Mil y un Kebab'${RESET} y empieza a reirse freneticamente mientras golpea la gema que hay en el centro de su baston.\nToda la sala empieza a temblar y las paredes de sala se bajan dejando ver cientos de asadores de kebab.\n${C_ENEMIGO}${user.name}${RESET} golpea con su baston el suelo y todas las espadas de kebab se mueven y lanzan hacia ti, ensartandote y causando ${C_ARTIFACT}${damage}${RESET} puntos de daño\n${C_ENEMIGO}${user.name}${RESET} ha cogido una espada de kebab en el aire y aprovecha para comersela, recuperando ${C_HEROE}100${RESET} de hp`;
+  }
+}
+
+class Meteoro extends Skill {
+  constructor() { super({ name: "ZokusheiShokan: Meteoro", sp_cost: 50, cooldown: 3, level_required: 1 }); }
+  effect(user, target) { return new ZokusheiShokan().meteoro(user, target); }
+}
+
+class JuicioFinal extends Skill {
+  constructor() { super({ name: "Juicio Final", sp_cost: 50, cooldown: 4, level_required: 1 }); }
+  effect(user, target) { return new ZokusheiShokan().juicio_final(user, target); }
+}
+
+class Thor extends Skill {
+  constructor() { super({ name: "Thor", sp_cost: 50, cooldown: 4, level_required: 1 }); }
+  effect(user, target) { return new ZokusheiShokan().thor(user, target); }
+}
+
+class Boreal extends Skill {
+  constructor() { super({ name: "Boreal", sp_cost: 50, cooldown: 4, level_required: 1 }); }
+  effect(user, target) { return new ZokusheiShokan().boreal(user, target); }
+}
+
+class MeVoyAFumar extends Skill {
+  constructor() { super({ name: "Me voy a fumar", sp_cost: 15, cooldown: 4, level_required: 1 }); }
+  effect(user, target) {
+    if (target.is_boss) {
+      return `¡${C_HEROE}${user.name}${RESET} intenta encenderse un cigarro para irse, pero la imponente presencia de ${C_ENEMIGO}${target.name}${RESET} no se lo permite!`;
+    }
+    user.fled = true;
+    return `¡${C_HEROE}${user.name}${RESET} se enciende un cigarro y se va del combate tranquilamente!`;
+  }
+}
+
+const SKILLS_PLAYER = [
+  DisparoDeBalin, GiroHipnotico, OllaExplosiva, VozConfusa,
+  RecitalMarxista, SiestaMaldita, InvocacionNatural, SustanciasPeligrosas,
+  MeriendaCenaMedieval, TeknoDiario, TurraEterna, BFG9000
+];
+
+/* =========================================================
+   4. OBJETOS Y ARTEFACTOS (item.py)
+   ========================================================= */
+class Item {
+  constructor(name, heal_hp = 0, heal_sp = 0, price = 0, description = "") {
+    this.name = name;
+    this.heal_hp = heal_hp;
+    this.heal_sp = heal_sp;
+    this.price = price;
+    this.description = description;
+  }
+  use(player) {
+    player.heal(this.heal_hp);
+    player.sp = Math.min(player.sp + this.heal_sp, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} usa ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${this.heal_hp}${RESET} HP y ${C_ARTIFACT}${this.heal_sp}${RESET} SP.`;
+  }
+}
+
+class EstrellaLevante extends Item {
+  constructor() { super("Quinto de Estrella", 0, 0, 20, "Un quinto de la mejor cerveza murciana.\nRecupera 50% de SP."); }
+  use(player) {
+    const sp_amount = Math.trunc(player.sp_max * 0.5);
+    player.sp = Math.min(player.sp + sp_amount, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} se bebe un ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${sp_amount}${RESET} SP.`;
+  }
+}
+
+class Guldendraak extends Item {
+  constructor() { super("Pinta de Gulden Draak", 0, 0, 40, "Una pinta de la cerveza mas potente.\nRecupera 100% de SP."); }
+  use(player) {
+    const sp_amount = Math.trunc(player.sp_max);
+    player.sp = Math.min(player.sp + sp_amount, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} se bebe una ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${sp_amount}${RESET} SP.`;
+  }
+}
+
+class Fricandela extends Item {
+  constructor() { super("Fricandela Especial", 0, 0, 20, "Una salchicha belga con un acompañamiento muy especial.\nRecupera 50% de HP."); }
+  use(player) {
+    const hp_amount = Math.trunc(player.hp_max * 0.5);
+    player.heal(hp_amount);
+    return `${C_HEROE}${player.name}${RESET} se come una ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${hp_amount}${RESET} HP.`;
+  }
+}
+
+class Mexicano extends Item {
+  constructor() { super("Mexicano", 0, 0, 40, "Un trozo de carne especiada, bueno que te cagas.\nRecupera 100% de HP."); }
+  use(player) {
+    const hp_amount = Math.trunc(player.hp_max);
+    player.heal(hp_amount);
+    return `${C_HEROE}${player.name}${RESET} se come un ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${hp_amount}${RESET} HP.`;
+  }
+}
+
+class MenuRolloMixto extends Item {
+  constructor() { super("Menu de Rollo Mixto", 0, 0, 70, "Un delicioso menu rollo mixto con patatas y bebida\nRecupera 50% de HP y 50% de SP"); }
+  use(player) {
+    const hp_amount = Math.trunc(player.hp_max * 0.5);
+    player.heal(hp_amount);
+    const sp_amount = Math.trunc(player.sp_max * 0.5);
+    player.sp = Math.min(player.sp + sp_amount, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} se toma un ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${hp_amount}${RESET} HP y ${C_ARTIFACT}${sp_amount}${RESET} SP.`;
+  }
+}
+
+class MenuFritaten extends Item {
+  constructor() { super("Menu del Fritaten", 0, 0, 100, "Un menu completo del Fritaten con patatas y bebida\nRecupera 100% de HP y 100% de SP"); }
+  use(player) {
+    const hp_amount = Math.trunc(player.hp_max);
+    player.heal(hp_amount);
+    const sp_amount = Math.trunc(player.sp_max);
+    player.sp = Math.min(player.sp + sp_amount, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} se toma un ${C_ITEM}${this.name}${RESET} y recupera ${C_ARTIFACT}${hp_amount}${RESET} HP y ${C_ARTIFACT}${sp_amount}${RESET} SP.`;
+  }
+}
+
+class Artifact {
+  constructor({ name, description, active_once = false, special = false, trigger_mode = "passive", price = 0 }) {
+    this.name = name;
+    this.description = description;
+    this.active_once = active_once;
+    this.special = special;
+    this.trigger_mode = trigger_mode;
+    this.price = price;
+  }
+  apply_passive(player, enemy) { return null; }
+  on_combat_start(player, enemy) { return null; }
+}
+
+class AcreditacionMLP extends Artifact {
+  constructor() { super({ name: "Acreditacion de la MLP", description: "Acreditacion de la aclamada Murcia Lan Party\nDa tanto Hype que sube todas tus estadisticas 5 puntos", active_once: true, price: 45 }); }
+  apply_passive(player) {
+    player.hp_max += 5; player.sp_max += 5; player.attack += 5; player.defense += 5;
+    return `${C_HEROE}${player.name}${RESET} siente el poder de la ${C_ARTIFACT}MLP${RESET} y sus estadisticas aumentan 5 puntos.`;
+  }
+}
+
+class SteamMachine extends Artifact {
+  constructor() { super({ name: "SteamMachine", description: "La ultima maravilla tecnologica de Gabe Newell\nAumenta tu potencia de juego, aumentando tus estadisticas 15 puntos", active_once: true, price: 1039 }); }
+  apply_passive(player) {
+    player.hp_max += 15; player.sp_max += 15; player.attack += 15; player.defense += 15;
+    return `${C_HEROE}${player.name}${RESET} enchufa la ${C_ARTIFACT}${this.name}${RESET} y sus estadisticas aumentan 15 puntos.`;
+  }
+}
+
+class NintendoSwitch2 extends Artifact {
+  constructor() { super({ name: "Nintendo Switch 2", description: "Ultima consola de Nintendo\nAumenta tu potencia de juego, aumentando tus estadisticas 10 puntos", active_once: true, price: 540 }); }
+  apply_passive(player) {
+    player.hp_max += 10; player.sp_max += 10; player.attack += 10; player.defense += 10;
+    return `${C_HEROE}${player.name}${RESET} tiene el morro ardiendo con su nueva ${C_ARTIFACT}${this.name}${RESET} y sus estadisticas aumentan 10 puntos.`;
+  }
+}
+
+class RedDeVoley extends Artifact {
+  constructor() { super({ name: "Red de Voley", description: "Red de voley para jugar con los colegas\nSiempre acaba montandose mal, asi que a la minima acaba algun enemigo enredado.", price: 80 }); }
+  apply_passive(player, enemy) {
+    if (Math.random() < 0.25) {
+      enemy.lose_turn = true;
+      return `${C_ENEMIGO}${enemy.name}${RESET} se ha enredado en la ${C_ARTIFACT}${this.name}${RESET}, pierde su turno.`;
+    }
+    return null;
+  }
+}
+
+class Ocarina extends Artifact {
+  constructor() { super({ name: "Ocarina", description: "Una Ocarina magica\nEs bastante dificil de tocar, pero al llevarla sientes cierto poder magico", active_once: true, price: 30 }); }
+  apply_passive(player) {
+    player.sp_max += 25;
+    return `${C_HEROE}${player.name}${RESET} siente el poder de la ${C_ARTIFACT}${this.name}${RESET} y sus SP aumenta 25 puntos.`;
+  }
+}
+
+class Trifuerza extends Artifact {
+  constructor() { super({ name: "Trifuerza", description: "La legendaria Trifuerza\nAl obtenerla, sientes un poder increible. Aumentan tus estadisticas en 30 puntos", active_once: true, special: true, price: 333 }); }
+  apply_passive(player) {
+    player.hp_max += 30; player.sp_max += 30; player.attack += 30; player.defense += 30;
+    return `${C_HEROE}${player.name}${RESET} siente el poder de la ${C_ARTIFACT}${this.name}${RESET} y sus estadisticas aumentan 30 puntos.`;
+  }
+}
+
+class Violin extends Artifact {
+  constructor() { super({ name: "Violin", description: "Un violin magico\nCada vez que pierdes turno, aprovechas para tocarselo un poco a tu señora", price: 50 }); }
+  apply_passive(player) {
+    if (player.lose_turn) {
+      const h = Math.trunc(player.hp_max * 0.1);
+      const s = Math.trunc(player.sp_max * 0.1);
+      player.heal(h);
+      player.sp = Math.min(player.sp + s, player.sp_max);
+      return `${C_HEROE}${player.name}${RESET} aprovecha su turno perdido para tocar el ${C_ARTIFACT}${this.name}${RESET} y recupera ${h} HP y ${s} SP`;
+    }
+    return null;
+  }
+}
+
+class SuperEscopeta extends Artifact {
+  constructor() { super({ name: "Super Escopeta", description: "Una escopeta de doble cañon\nAumenta tu ataque en 15 puntos", active_once: true, price: 70 }); }
+  apply_passive(player) {
+    player.attack += 15;
+    return `${C_HEROE}${player.name}${RESET} carga la ${C_ARTIFACT}${this.name}${RESET} y sus ataque aumenta 15 puntos.`;
+  }
+}
+
+class Cortana extends Artifact {
+  constructor() { super({ name: "Cortana", description: "Una IA de ultima generacion, capaz de anticipar cualquier movimiento enemigo\nAumenta tu defensa en 10 puntos", active_once: true, price: 70 }); }
+  apply_passive(player) {
+    player.defense += 10;
+    return `${C_HEROE}${player.name}${RESET} se equipa a ${C_ARTIFACT}${this.name}${RESET} y su defensa aumenta 10 puntos.`;
+  }
+}
+
+class PiedraDePsinergia extends Artifact {
+  constructor() { super({ name: "Piedra de Psinergia", description: "Una piedra que aumenta tu poder magico\nAumenta tu SP en 50 puntos", active_once: true, price: 40 }); }
+  apply_passive(player) {
+    player.sp_max += 50;
+    return `${C_HEROE}${player.name}${RESET} siente el poder de la ${C_ARTIFACT}${this.name}${RESET} y sus SP aumenta 50 puntos.`;
+  }
+}
+
+class PiedraBruja extends Artifact {
+  constructor() { super({ name: "Piedra Bruja", description: "Una piedra verde brillante, da muy mal rollo\nMucho tu SP, ataque y defensa a costa de tu salud", active_once: true, price: 666 }); }
+  apply_passive(player) {
+    player.attack += 20;
+    player.defense += 10;
+    player.sp_max += 100;
+    player.hp_max -= 30;
+    if (player.hp > player.hp_max) player.hp = player.hp_max;
+    return `${C_HEROE}${player.name}${RESET} siente el poder de la ${C_ARTIFACT}${this.name}${RESET} y sus SP aumenta 100 puntos, su ataque 20 puntos y su defensa 10 puntos, pero sus HP maximos disminuyen 30 puntos.`;
+  }
+}
+
+class TomoDeOnePiece extends Artifact {
+  constructor() { super({ name: "Tomo de One Piece", description: "Un tomo del manga de One Piece, ¡Como mola!\nAumenta tu HP y SP en 20 puntos y tu ataque en 10 puntos", active_once: true, price: 50 }); }
+  apply_passive(player) {
+    player.hp_max += 20; player.sp_max += 20; player.attack += 10;
+    return `Al leer el Tomo de One Piece, ${C_HEROE}${player.name}${RESET} se inspira y aumenta su HP y SP en 20 puntos y su ataque aumenta 10 puntos.`;
+  }
+}
+
+class CartaDragonBlancoOjosAzules extends Artifact {
+  constructor() { super({ name: "Carta del Dragon Blanco de Ojos Azules", description: "Una carta del Dragon Blanco de Ojos Azules de Yu-Gi-Oh! que da mucho poder\nAumenta tu ataque en 20 puntos y tu HP en 50 puntos", active_once: true, price: 80 }); }
+  apply_passive(player) {
+    player.attack += 20; player.hp_max += 50;
+    return `Invoca el poder del poderoso Dragon Blanco de Ojos Azules, ${C_HEROE}${player.name}${RESET} aumenta su HP y ataque en 50 y 20 puntos respectivamente`;
+  }
+}
+
+class CartaMagoOscuro extends Artifact {
+  constructor() { super({ name: "Carta del Mago Oscuro", description: "Una carta del mago oscuro de Yu-Gi-Oh! que da mucho poder\nAumenta tu SP en 50 puntos y tu ataque en 10 puntos", active_once: true, price: 80 }); }
+  apply_passive(player) {
+    player.sp_max += 50; player.attack += 10;
+    return `${C_HEROE}${player.name}${RESET} invoca el poder del Mago Oscuro y aumenta su SP y ataque en 50 y 10 puntos respectivamente`;
+  }
+}
+
+class GranNispero extends Artifact {
+  constructor() {
+    super({
+      name: "El Gran Níspero",
+      description: "Un gran níspero nispero brillante, símbolo del legendario clan ECDN\nTe da una vida extra: si mueres, revives con HP y SP al máximo.",
+      trigger_mode: "on_death",
+      price: 1000
+    });
+    this.revives_on_death = true;
+    this.used = false;
+  }
+  apply_passive(player) {
+    if (this.revives_on_death && !this.used) {
+      this.used = true;
+      this.revives_on_death = false;
+      player.hp = player.hp_max;
+      player.sp = player.sp_max;
+      return `\n🌟 ¡La luz del clan ECDN resuena! ${C_HEROE}${player.name}${RESET} cae en combate, pero el ${C_ARTIFACT}${this.name}${RESET} se consume y le devuelve a la vida con todo su poder.\n`;
+    }
+    return null;
+  }
+}
+
+class AlbumChopeaPepeda extends Artifact {
+  constructor() {
+    super({
+      name: "Album Chopea Pepeda",
+      description: "Un album de fotos de Pepeda, el legendario Gamer, Lanero, One Piece Teorico, Podcaster, Streamer, Mastodonte, Sultan, Destructor de Mundos...\nHay grandes momentos y enseñanzas en sus paginas, duplica la experiencia obtenida en combate",
+      price: 250,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.experience_multiplier = 2;
+    return `${C_HEROE}${player.name}${RESET} siente el poder del ${C_ARTIFACT}${this.name}${RESET} y duplica la experiencia obtenida en combate`;
+  }
+}
+
+class DjinnDeFuego extends Artifact {
+  constructor() {
+    super({
+      name: "Djinn de Fuego",
+      description: "Un Djinn del elemento fuego\n El jugador puede usar la skill ZokusheiShokan: Meteoro.\n Aumenta su ataque en 10 puntos.",
+      active_once: true,
+      price: 150
+    });
+  }
+  apply_passive(player) {
+    player.attack += 10;
+    player.skills.push(new Meteoro());
+    return `${C_HEROE}${player.name}${RESET} ha aprendido la habilidad '${C_SKILL}ZokusheiShokan: Meteoro${RESET}'.`;
+  }
+}
+
+class DjinnDeTierra extends Artifact {
+  constructor() {
+    super({
+      name: "Djinn de Tierra",
+      description: "Un Djinn del elemento tierra\nEl jugador puede usar la skill ZokusheiShokan: Juicio Final.\n Aumenta su HP maximo en 50 puntos.",
+      price: 150,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.hp_max += 50;
+    player.skills.push(new JuicioFinal());
+    return `${C_HEROE}${player.name}${RESET} ha aprendido la habilidad '${C_SKILL}ZokusheiShokan: Juicio Final${RESET}'.`;
+  }
+}
+
+class DjinnDeViento extends Artifact {
+  constructor() {
+    super({
+      name: "Djinn de Viento",
+      description: "Un Djinn del elemento viento\nEl jugador puede usar la skill ZokusheiShokan: Thor.\n Aumenta su defensa en 10 puntos.",
+      price: 150,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.defense += 10;
+    player.skills.push(new Thor());
+    return `${C_HEROE}${player.name}${RESET} ha aprendido la habilidad '${C_SKILL}ZokusheiShokan: Thor${RESET}'.`;
+  }
+}
+
+class DjinnDeAgua extends Artifact {
+  constructor() {
+    super({
+      name: "Djinn de Agua",
+      description: "Un Djinn del elemento agua\nEl jugador puede usar la skill ZokusheiShokan: Boreal.\n Aumenta su SP maximo en 50 puntos.",
+      price: 150,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.sp_max += 50;
+    player.skills.push(new Boreal());
+    return `${C_HEROE}${player.name}${RESET} ha aprendido la habilidad '${C_SKILL}ZokusheiShokan: Boreal${RESET}'.`;
+  }
+}
+
+class TequilaRanchitos extends Artifact {
+  constructor() {
+    super({
+      name: "Tequila Ranchitos",
+      description: "Un tequila de la marca Ranchitos, el mejor tequila del mundo, si lo que buscas es una muerte larga y dolorosa\nCuriosamente, aunque te este destruyendo por dentro, sientes un subidon al beberlo\n Obtienes la habilidad 'Por la Paz'",
+      active_once: true,
+      price: 50
+    });
+  }
+  apply_passive(player) {
+    player.skills.push(new PorlaPaz());
+    return `${C_HEROE}${player.name}${RESET} ha aprendido la habilidad '${C_SKILL}Por la paz${RESET}'.`;
+  }
+}
+
+class AlmohadaDeYuri extends Artifact {
+  constructor() {
+    super({
+      name: "Almohada de Yuri",
+      description: "La siempre confiable Almohada de Yuri, para las siestas mas duras y placenteras\nRecupera cada turno 10% de HP y 10% de SP",
+      price: 100,
+      trigger_mode: "turn_start"
+    });
+  }
+  apply_passive(player) {
+    const h = Math.trunc(player.hp_max * 0.05);
+    const s = Math.trunc(player.sp_max * 0.05);
+    player.heal(h);
+    player.sp = Math.min(player.sp + s, player.sp_max);
+    return `${C_HEROE}${player.name}${RESET} se siente descansado gracias a la ${C_ARTIFACT}${this.name}${RESET}, recupera ${C_HEROE}${h}${RESET} HP y ${C_HEROE}${s}${RESET} SP.`;
+  }
+}
+
+class PistolonDeMatabufalez extends Artifact {
+  constructor() {
+    super({
+      name: "Pistolon de Matabufalez",
+      description: "La temida arma de Matabufalez, huyen de ella tanto amigos como enemigos\nTras realizar un ataque existe la posibilidad que dispare con ella.",
+      price: 150,
+      trigger_mode: "attack"
+    });
+  }
+  apply_passive(player, enemy) {
+    if (Math.random() < 0.5) {
+      const damage = Math.trunc(Math.max(0, player.attack * 1.5 - enemy.defense));
+      enemy.take_damage(damage);
+      return `${C_HEROE}${player.name}${RESET} dispara con el ${C_ARTIFACT}${this.name}${RESET} y causa ${damage} de daño a ${C_ENEMIGO}${enemy.name}${RESET}.`;
+    }
+    return null;
+  }
+}
+
+class RunasDeFreakmaster extends Artifact {
+  constructor() {
+    super({
+      name: "Runas de Freakmaster",
+      description: "Unas runas que predicen el futuro.\nNo siempre aciertan, pero si lo hacen, evitan el daño ese turno.",
+      price: 150,
+      trigger_mode: "turn_start"
+    });
+  }
+  apply_passive(player) {
+    if (Math.random() < 0.3) {
+      player.avoid_damage = true;
+      return `Las ${C_ARTIFACT}${this.name}${RESET} brillan y mandan un aviso del proximo movimiento del enemigo a la mente de ${C_HEROE}${player.name}${RESET}\n ${C_HEROE}${player.name}${RESET} evita el daño de este turno.`;
+    }
+    return null;
+  }
+}
+
+class BaflesDeSami extends Artifact {
+  constructor() {
+    super({
+      name: "Bafles de Sami",
+      description: "Unos bafles que resuenan con el poder acumulado de tus artefactos.\n Al inicio del combate, ganas +5 HP, +5 SP, +0.5 ATQ y +0.5 DEF por cada artefacto que poseas.",
+      price: 150,
+      trigger_mode: "combat_start"
+    });
+    this.triggered = false;
+  }
+  on_combat_start(player, enemy) {
+    if (this.triggered || !enemy) return null;
+    this.triggered = true;
+    const cantidad_artefactos = player.artifacts.length;
+    const bono_max = Math.trunc(cantidad_artefactos * 5);
+    const bono_stats = Math.trunc(cantidad_artefactos / 2);
+    player.hp_max += bono_max;
+    player.sp_max += bono_max;
+    player.hp += bono_max;
+    player.sp += bono_max;
+    player.attack += bono_stats;
+    player.defense += bono_stats;
+    return `🔊 El ritmo de los ${C_ARTIFACT}${this.name}${RESET} resuena con tus ${C_ITEM}${cantidad_artefactos}${RESET} artefactos. ¡${C_HEROE}${player.name}${RESET} aumenta hasta ${bono_max} HP/SP y ${bono_stats} ATQ/DEF!`;
+  }
+}
+
+class LlaveEspada extends Artifact {
+  constructor() {
+    super({
+      name: "Llave Espada",
+      description: "La llave espada, un arma legendaria que blanden los elegidos.\nAumenta tu ataque en 50 puntos y tu HP y SP en 100 puntos",
+      price: 200,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.attack += 25;
+    player.sp_max += 50;
+    player.hp_max += 50;
+    return `${C_HEROE}${player.name}${RESET} blande la ${C_ARTIFACT}${this.name}${RESET} y aumenta su ataque en 25 puntos y su HP y SP en 50 puntos.`;
+  }
+}
+
+class PaqueteDeTabaco extends Artifact {
+  constructor() {
+    super({
+      name: "Paquete de Tabaco",
+      description: "Un paquete de tabaco\nObtienes la habilidad 'Me voy a fumar' y tu defensa aumenta en 5 puntos.",
+      price: 50,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.defense += 5;
+    player.skills.push(new MeVoyAFumar());
+    return `${player.name} se coloca el paquete en el bolsillo de la camisa y aprende la habilidad 'Me voy a fumar'.`;
+  }
+}
+
+class Clackers extends Artifact {
+  constructor() {
+    super({
+      name: "Clackers",
+      description: "Los clasicos clackers, ideales para romper narices y causar un gran daño a los enemigos",
+      price: 100
+    });
+  }
+  apply_passive(player) {
+    player.attack += 5;
+    return `${C_HEROE}${player.name}${RESET} golpea con los ${C_ARTIFACT}${this.name}${RESET} y aumenta su ataque en 5 puntos.`;
+  }
+}
+
+class TrajeZeta extends Artifact {
+  constructor() {
+    super({
+      name: "Traje Zeta",
+      description: "Un traje usado por un gran heroe\nAl comienzo del combate multiplica por dos tu ataque y defensa",
+      price: 150,
+      trigger_mode: "combat_start"
+    });
+    this.triggered = false;
+  }
+  on_combat_start(player, enemy) {
+    if (this.triggered || !enemy) return null;
+    this.triggered = true;
+    player.attack *= 2;
+    player.defense *= 2;
+    return `${C_HEROE}${player.name}${RESET} viste el ${C_ARTIFACT}${this.name}${RESET} y duplica su ataque y defensa durante este combate.`;
+  }
+}
+
+class CalcetinSucio extends Artifact {
+  constructor() {
+    super({
+      name: "Calcetin Sucio",
+      description: "Un calcetin apestoso, usado durante una larga jornada de Verano en Murcia\nSu olor es tan intenso, que reduce un 25% la vida del enemigo al iniciar el combate",
+      price: 200,
+      trigger_mode: "combat_start"
+    });
+    this.triggered = false;
+  }
+  on_combat_start(player, enemy) {
+    if (this.triggered || !enemy || !enemy.is_alive()) return null;
+    this.triggered = true;
+    enemy.hp = Math.max(1, Math.trunc(enemy.hp * 0.75));
+    return `${C_HEROE}${player.name}${RESET} lanza a la cara de ${C_ENEMIGO}${enemy.name}${RESET} el ${C_ARTIFACT}${this.name}${RESET} y reduce su vida en un 25%.`;
+  }
+}
+
+class FiguraStandCrazyDiamond extends Artifact {
+  constructor() {
+    super({
+      name: "Figura de Crazy Diamond",
+      description: "Una figura de coleccionismo de Crazy Diamond\nNo entiendes porque pero te hace sentir mejor",
+      price: 250,
+      trigger_mode: "combat_start"
+    });
+    this.triggered = false;
+  }
+  on_combat_start(player, enemy) {
+    if (this.triggered || !enemy) return null;
+    this.triggered = true;
+    const heal_amount = Math.trunc(player.hp_max * 0.30);
+    player.hp = Math.min(player.hp + heal_amount, player.hp_max);
+    return `${C_HEROE}${player.name}${RESET} admira la ${C_ARTIFACT}${this.name}${RESET} y siente sus energias volver, ${C_HEROE}${player.name}${RESET} recupera ${heal_amount} HP.`;
+  }
+}
+
+class TartaShawarma extends Artifact {
+  constructor() {
+    super({
+      name: "Tarta Shawarma",
+      description: "Una tarta de shawarma, la especialidad de Alan\nrecupera un 10% de la vida maxima cada turno",
+      price: 555,
+      trigger_mode: "turn_start"
+    });
+  }
+  apply_passive(player) {
+    const heal_amount = Math.trunc(player.hp_max * 0.10);
+    player.hp = Math.min(player.hp + heal_amount, player.hp_max);
+    return `${C_HEROE}${player.name}${RESET} come la ${C_ARTIFACT}${this.name}${RESET} y recupera ${C_HEROE}${heal_amount}${RESET} HP.`;
+  }
+}
+
+class PorroDeLasTeorias extends Artifact {
+  constructor() {
+    super({
+      name: "Porro de las Teorías",
+      description: "Un porro con el que cada calada te ilumina con una nueva teoría loca\nTeorizas sobre ti mismo y obtienes una habilidad aleatoria nueva",
+      active_once: true,
+      price: 100
+    });
+  }
+  apply_passive(player) {
+    const actuales = new Set(player.skills.map(s => s.constructor));
+    const disponibles = SKILLS_PLAYER.filter(cls => !actuales.has(cls));
+    if (disponibles.length === 0) {
+      return `${player.name} fuma el ${this.name}, ¡pero su mente ya está en un plano superior y no hay nada nuevo que pueda aprender!`;
+    }
+    const SkillCls = choice(disponibles);
+    const newSkill = new SkillCls();
+    newSkill.level_required = 0;
+    player.skills.push(newSkill);
+    return `${player.name} fuma de las teorías y ha aprendido la nueva habilidad '${newSkill.name}'.`;
+  }
+}
+
+class ManoDeMidas extends Artifact {
+  constructor() {
+    super({
+      name: "Mano de Midas",
+      description: "Una mano dorada que atrae la fortuna\nDuplica el oro obtenido de los enemigos",
+      price: 300,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    player.gold_multiplier *= 2;
+    return `${C_HEROE}${player.name}${RESET} coge la ${C_ARTIFACT}${this.name}${RESET} y duplica el oro que obtiene de los enemigos.`;
+  }
+}
+
+class BastonDeAghanim extends Artifact {
+  constructor() {
+    super({
+      name: "Cetro de Aghanim",
+      description: "Un cetro que potencia tus habilidades\nObtiene la habilidad 'ERA TAN FACIL",
+      price: 300,
+      active_once: true
+    });
+  }
+  apply_passive(player) {
+    const skill = new EraTanFacil();
+    player.skills.push(skill);
+    return `${C_HEROE}${player.name}${RESET} empuña el ${C_ARTIFACT}${this.name}${RESET} y obtiene la habilidad '${skill.name}'.`;
+  }
+}
+
+class CaretaDePepeda extends Artifact {
+  constructor() {
+    super({
+      name: "Careta de Pepeda",
+      description: "Una careta de Pepeda, el legendario Gamer, Lanero, One Piece Teorico, Podcaster, Streamer, Mastodonte, Sultan, Destructor de Mundos...\nSus siervos pueden confundirte con el y ofrecer un tributo en vez de pelear",
+      trigger_mode: "combat_start",
+      price: 500
+    });
+    this.triggered = false;
+  }
+  on_combat_start(player, enemy) {
+    if (this.triggered || !enemy || enemy.is_boss) return null;
+    this.triggered = true;
+    if (Math.random() < 0.3) {
+      enemy.hp = 0;
+      const reward_message = grant_random_reward(player);
+      enemy.loot_items = [];
+      enemy.loot_artifacts = [];
+      return `${C_ENEMIGO}${enemy.name}${RESET} confunde a ${C_HEROE}${player.name}${RESET} con Pepeda gracias a la ${C_ARTIFACT}${this.name}${RESET} y le ofrece un tributo, ¡${C_ENEMIGO}${enemy.name}${RESET} ha sido derrotado!\n${reward_message}`;
+    }
+    return null;
+  }
+}
+
+function get_all_items() {
+  return [Fricandela, Mexicano, EstrellaLevante, Guldendraak, MenuRolloMixto, MenuFritaten];
+}
+
+function get_all_artifacts() {
+  return [
+    AcreditacionMLP, SteamMachine, NintendoSwitch2, RedDeVoley, Ocarina, Trifuerza,
+    Violin, SuperEscopeta, Cortana, PiedraDePsinergia, PiedraBruja, TomoDeOnePiece,
+    CartaDragonBlancoOjosAzules, CartaMagoOscuro, GranNispero, CaretaDePepeda,
+    AlbumChopeaPepeda, DjinnDeFuego, DjinnDeTierra, DjinnDeViento, DjinnDeAgua,
+    PorroDeLasTeorias, CalcetinSucio, TrajeZeta, Clackers, FiguraStandCrazyDiamond,
+    TartaShawarma, PaqueteDeTabaco, LlaveEspada, BaflesDeSami, RunasDeFreakmaster, AlmohadaDeYuri,
+    PistolonDeMatabufalez, TequilaRanchitos, ManoDeMidas, BastonDeAghanim
+  ];
+}
+
+function grant_random_reward(player) {
+  const reward_items = get_all_items();
+  const ownedNames = new Set(player.artifacts.map(a => a.name));
+  const reward_artifacts = get_all_artifacts().filter(Cls => !ownedNames.has(new Cls().name));
+  if (Math.random() < 0.75 || reward_artifacts.length === 0) {
+    const RCls = choice(reward_items);
+    const reward = new RCls();
+    player.add_item(reward);
+    return `${C_HEROE}${player.name}${RESET} recibe un premio: ${C_ITEM}${reward.name}${RESET}`;
+  }
+  const ACls = choice(reward_artifacts);
+  return player.add_artifact(new ACls());
+}
+
+/* =========================================================
+   5. PERSONAJES Y ENEMIGOS (character.py, enemy.py, data.py)
+   ========================================================= */
+class Character {
+  constructor(name, char_class, hp, hp_max, sp, sp_max, attack, defense, level, experience) {
+    this.name = name;
+    this.char_class = char_class;
+    this.hp = hp;
+    this.hp_max = hp_max;
+    this.sp = sp;
+    this.sp_max = sp_max;
+    this.attack = attack;
+    this.defense = defense;
+    this.level = level;
+    this.experience = experience;
+    this.inventory = [];
+    this.artifacts = [];
+    this.skills = [];
+    this.lose_turn = false;
+    this.chapter = 1;
+    this.current_node_id = "n0";
+    this.gold = 0;
+    this.active_buffs = new Set();
+    this.experience_multiplier = 1;
+    this.gold_multiplier = 1;
+    this.avoid_damage = false;
+    this.is_boss = false;
+    this.pending_messages = [];
+  }
+
+  is_alive() {
+    return this.hp > 0;
+  }
+
+  take_damage(amount) {
+    if (this.avoid_damage) {
+      this.avoid_damage = false;
+      const msg = `${C_HEROE}${this.name}${RESET} evita el daño de este turno.`;
+      this.pending_messages.push(msg);
+      return msg;
+    }
+
+    this.hp -= amount;
+    if (this.hp < 0) this.hp = 0;
+
+    if (this.hp <= 0) {
+      for (const artifact of this.artifacts) {
+        if (artifact.revives_on_death && !artifact.used) {
+          artifact.used = true;
+          this.hp = this.hp_max;
+          this.sp = this.sp_max;
+          this.lose_turn = false;
+          const msg = `El ${C_ARTIFACT}${artifact.name}${RESET} que había en el bolsillo de ${C_HEROE}${this.name}${RESET} se ilumina y entra en su boca.\n${C_HEROE}${this.name}${RESET} ha sido resucitado por ${C_ARTIFACT}${artifact.name}${RESET}.`;
+          this.pending_messages.push(msg);
+          return msg;
+        }
+      }
+    }
+    return null;
+  }
+
+  heal(amount) {
+    this.hp = Math.min(this.hp + amount, this.hp_max);
+  }
+
+  get_status() {
+    return `${C_HEROE}${this.name}${RESET} - HP: ${C_ARTIFACT}${this.hp}${RESET}/${C_HEROE}${this.hp_max}${RESET}, SP: ${C_ARTIFACT}${this.sp}${RESET}/${C_HEROE}${this.sp_max}${RESET}, level: ${C_BOSS}${this.level}${RESET}`;
+  }
+
+  get_stats() {
+    return `${C_HEROE}${this.name}${RESET} - HP: ${C_ARTIFACT}${this.hp}${RESET}/${C_HEROE}${this.hp_max}${RESET}, SP: ${C_ARTIFACT}${this.sp}${RESET}/${C_HEROE}${this.sp_max}${RESET}, level: ${C_BOSS}${this.level}${RESET}\nAttack: ${C_HEROE}${this.attack}${RESET}, Defense: ${C_HEROE}${this.defense}${RESET}, Experience: ${C_SKILL}${this.experience}${RESET}, Gold: ${C_ITEM}${this.gold}${RESET}, Chapter: ${C_BOSS}${this.chapter}${RESET}`;
+  }
+
+  get_available_skills() {
+    return this.skills.filter(s => s.level_required <= this.level && !s.is_passive);
+  }
+
+  check_level_up() {
+    const messages = [];
+    while (this.experience >= this.level * 100) {
+      this.experience -= this.level * 100;
+      this.level += 1;
+      if (this.on_level_up) this.on_level_up();
+      messages.push(`¡${C_HEROE}${this.name}${RESET} ha subido al nivel ${C_SKILL}${this.level}${RESET}!`);
+      const newSkills = this.skills.filter(s => s.level_required === this.level);
+      for (const sk of newSkills) {
+        messages.push(`¡${C_HEROE}${this.name}${RESET} ha aprendido ${C_SKILL}${sk.name}${RESET}!`);
+      }
+    }
+    return messages.length > 0 ? messages : null;
+  }
+
+  add_item(item) {
+    this.inventory.push(item);
+    return `¡${C_HEROE}${this.name}${RESET} ha obtenido ${C_ITEM}${item.name}${RESET}!`;
+  }
+
+  add_artifact(artifact) {
+    for (const a of this.artifacts) {
+      if (a.constructor === artifact.constructor || a.name === artifact.name) {
+        const price = artifact.price || 0;
+        if (price) {
+          const compensation = Math.trunc(price / 2);
+          this.gold += compensation;
+          return `${C_HEROE}${this.name}${RESET} ya posee el artefacto ${C_ARTIFACT}${artifact.name}${RESET}. Recibe ${C_ITEM}${compensation}${RESET} de oro en compensación.`;
+        }
+        return `${C_HEROE}${this.name}${RESET} ya posee el artefacto ${C_ARTIFACT}${artifact.name}${RESET}, no puede adquirirlo de nuevo.`;
+      }
+    }
+    this.artifacts.push(artifact);
+    let mensaje_final = `${C_HEROE}${this.name}${RESET} ha obtenido el artefacto ${C_ARTIFACT}${artifact.name}${RESET}: ${C_BOSS}${artifact.description}${RESET}.`;
+    if (artifact.active_once) {
+      const mensaje_efecto = artifact.apply_passive(this, null);
+      if (mensaje_efecto) {
+        mensaje_final += `\n🌟 ${mensaje_efecto}`;
+      }
+    }
+    return mensaje_final;
+  }
+}
+
+class Matabufalez extends Character {
+  constructor() {
+    super("Matabufalez", "Matabufalez", 120, 120, 50, 50, 14, 6, 1, 0);
+    this.skills = [new DisparoDeBalin(), new GiroHipnotico(), new OllaExplosiva()];
+    this.inventory = [new EstrellaLevante()];
+    this.artifacts = [new PistolonDeMatabufalez()];
+  }
+  on_level_up() {
+    this.hp_max += 15; this.attack += 2; this.defense += 1; this.sp_max += 5;
+    this.hp = this.hp_max; this.sp = this.sp_max;
+  }
+  get_epilogue() {
+    return `${C_HEROE}${this.name}${RESET}, conseguiste vencer a Pepeda y, como antiguo antipepeda, lo disfrutaste durante un momento.
+El cadáver de Pepeda se empezó a desvanecer en un humo azulado.
+Su bastón, ahora sin dueño, cayó al suelo destruyendo su gema central. Esto activó algo, pues el suelo empezó a temblar.
+Unas escaleras secretas aparecieron frente al trono donde se encontraba Pepeda.
+Al bajar, te encontraste con un mapa gigantesco del mundo y distintos puntos parpadeando en rojo.
+Frente al mapa había una consola con botones y pantalla. Al probarla, se confirmaron tus peores sospechas:
+Pepeda no es un solo ente, el mundo está lleno de versiones tematizadas de él.
+Seleccionas al Pepeda Cowboy, sonríes y, desenfundando tu pistolón, le disparas a la cabeza en la pantalla.
+${C_HEROE}${this.name}${RESET}: "Tú eres el próximo..."`;
+  }
+}
+
+class Yuri extends Character {
+  constructor() {
+    super("JayC", "Yuri", 110, 110, 70, 70, 14, 8, 1, 0);
+    this.skills = [new VozConfusa(), new RecitalMarxista(), new SiestaMaldita()];
+    this.inventory = [new Fricandela()];
+    this.artifacts = [new AlmohadaDeYuri()];
+  }
+  on_level_up() {
+    this.hp_max += 10; this.attack += 1; this.defense += 1; this.sp_max += 10;
+    this.hp = this.hp_max; this.sp = this.sp_max;
+  }
+  get_epilogue() {
+    return `${C_HEROE}${this.name}${RESET}, conseguiste vencer a Pepeda y, como antiguo antipepeda, lo disfrutaste durante un momento.
+El cadáver de Pepeda se empezó a desvanecer en un humo azulado.
+Su bastón, ahora sin dueño, cayó al suelo destruyendo su gema central. Esto activó algo, pues el suelo empezó a temblar.
+Unas escaleras secretas aparecieron frente al trono donde se encontraba Pepeda.
+Al bajar, te encontraste con un mapa gigantesco del mundo y distintos puntos parpadeando en rojo.
+Frente al mapa había una consola con botones y pantalla. Al probarla, se confirmaron tus peores sospechas:
+Pepeda no es un solo ente, el mundo está lleno de versiones tematizadas de él.
+Seleccionas al Zar Pepeda, bostezas y sales de la sala con muchas tranquilidad.
+${C_HEROE}${this.name}${RESET}: "¡Necesito una siesta!"`;
+  }
+}
+
+class Freakmaster extends Character {
+  constructor() {
+    super("Freakmaster", "Freakmaster", 100, 100, 60, 60, 12, 8, 1, 0);
+    this.skills = [new InvocacionNatural(), new SustanciasPeligrosas(), new MeriendaCenaMedieval()];
+    this.inventory = [new EstrellaLevante()];
+    this.artifacts = [new RunasDeFreakmaster()];
+  }
+  on_level_up() {
+    this.hp_max += 8; this.attack += 1; this.defense += 2; this.sp_max += 8;
+    this.hp = this.hp_max; this.sp = this.sp_max;
+  }
+  get_epilogue() {
+    return `${C_HEROE}${this.name}${RESET}, conseguiste vencer a Pepeda y, como antiguo antipepeda, lo disfrutaste durante un momento.
+El cadáver de Pepeda se empezó a desvanecer en un humo azulado.
+Su bastón, ahora sin dueño, cayó al suelo destruyendo su gema central. Esto activó algo, pues el suelo empezó a temblar.
+Unas escaleras secretas aparecieron frente al trono donde se encontraba Pepeda.
+Al bajar, te encontraste con un mapa gigantesco del mundo y distintos puntos parpadeando en rojo.
+Frente al mapa había una consola con botones y pantalla. Al probarla, se confirmaron tus peores sospechas:
+Pepeda no es un solo ente, el mundo está lleno de versiones tematizadas de él.
+Seleccionas al Ganon Pepeda, sonríes y, acariciando a Colega, sales de la sala, dispuesto a seguir con tu aventura.
+${C_HEROE}${this.name}${RESET}: "¡Habrá que encontrar la Espada Maestra!"`;
+  }
+}
+
+class Sami extends Character {
+  constructor() {
+    super("Sami", "Sami", 90, 90, 50, 50, 12, 6, 1, 0);
+    this.skills = [new TeknoDiario(), new TurraEterna(), new BFG9000()];
+    this.inventory = [new Fricandela()];
+    this.artifacts = [new BaflesDeSami()];
+  }
+  on_level_up() {
+    this.hp_max += 5; this.attack += 2; this.defense += 2; this.sp_max += 5;
+    this.hp = this.hp_max; this.sp = this.sp_max;
+  }
+  get_epilogue() {
+    return `${C_HEROE}${this.name}${RESET}, conseguiste vencer a Pepeda y, como antiguo Propepeda, te estristeces un momento.
+El cadáver de Pepeda se empezó a desvanecer en un humo azulado.
+Su bastón, ahora sin dueño, cayó al suelo destruyendo su gema central. Esto activó algo, pues el suelo empezó a temblar.
+Unas escaleras secretas aparecieron frente al trono donde se encontraba Pepeda.
+Al bajar, te encontraste con un mapa gigantesco del mundo y distintos puntos parpadeando en rojo.
+Frente al mapa había una consola con botones y pantalla. Al probarla, se confirmaron tus peores sospechas:
+Pepeda no es un solo ente, el mundo está lleno de versiones tematizadas de él.
+Te percatas de que bajo la consola hay una carpeta, en su portada sale una foto de una tecnosacerdote y en su primera pagina pone "PROYECTO CASTELLA".
+Esa portada u el nombre del proyecto te suenan, sonries, descargas todos los archivos de la consola en un pen y sales de ahi.
+${C_HEROE}${this.name}${RESET}: "¡¿En que lio te has metido Pepeda?!"`;
+  }
+}
+
+class Ana extends Character {
+  constructor() {
+    super("Ana", "Ana", 150, 150, 120, 120, 20, 15, 1, 0);
+    this.skills = [new HallDeLaFama(), new CorteBienFiludo(), new MadreDeGatos()];
+    this.inventory = [new MenuRolloMixto(), new MenuRolloMixto(), new MenuRolloMixto(), new MenuRolloMixto(), new MenuRolloMixto()];
+    this.artifacts = [];
+    this.add_artifact(new AlbumChopeaPepeda());
+    this.add_artifact(new ManoDeMidas());
+  }
+  on_level_up() {
+    this.hp_max += 10; this.attack += 3; this.defense += 3; this.sp_max += 10;
+    this.hp = this.hp_max; this.sp = this.sp_max;
+  }
+  get_epilogue() {
+    return `${C_HEROE}${this.name}${RESET}, conseguiste vencer a Pepeda y, como su esposa, lo disfrutaste bastante pero tambien te entristece.
+Tu ultimo golpe fue certero pero Pepeda aun respira, te acercas a el y con una caricia en su cara le dices: ${C_ARTIFACT}"Te lo dije".${RESET}
+${C_ENEMIGO}Pepeda:${C_SKILL}"Sabes que lo hacia por nosotros, pero sin darme cuenta perdi el control... no queria haceros daño..."${RESET}
+${C_HEROE}${this.name}${RESET}: ${C_ARTIFACT}"Lo se, por eso debia pararte. Tu no eres asi."${RESET}
+${C_ENEMIGO}Pepeda:${C_SKILL}"Gracias por perdonarme... toma esto..."${RESET}
+El cuerpo de Pepeda se ilumina y desaparece dejando en tu mano un trozo metalico con inscripciones, tiene pestañas o clavijas que te hacen pensar que forma parte de algo mas grande.
+Su bastón, ahora sin dueño, cayó al suelo destruyendo su gema central. Esto activó algo, pues el suelo empezó a temblar.
+Unas escaleras secretas aparecieron frente al trono donde se encontraba Pepeda.
+Al bajar, te encontraste con un mapa gigantesco del mundo y distintos puntos parpadeando en rojo.
+Frente al mapa había una consola con botones y pantalla. Al probarla, se confirmaron tus peores sospechas:
+Pepeda no es un solo ente, el mundo está lleno de versiones tematizadas de él.
+Localizas un hueco en la consola donde encaja el trozo metalico que tienes en la mano, al colocarlo se abre un portal frente al mapa.
+Miras a Darwin y Ragnar que te contestan con un maullido y sin dudarlo, entrais en el portal.
+${C_HEROE}${this.name}${RESET}: ${C_ARTIFACT}"¡Ya le dije que si seguia obsesionandose con la kebabtologia pasaria esto!"${RESET}`;
+  }
+}
+
+class Enemy extends Character {
+  constructor(name, hp, hp_max, sp, sp_max, attack, defense, level, experience, gold = 0, loot_item_chance = 0, loot_items = [], loot_artifact_chance = 0, loot_artifacts = [], is_boss = false) {
+    super(name, "Enemy", hp, hp_max, sp, sp_max, attack, defense, level, experience);
+    this.gold = gold;
+    this.loot_item_chance = loot_item_chance;
+    this.loot_items = loot_items;
+    this.loot_artifact_chance = loot_artifact_chance;
+    this.loot_artifacts = loot_artifacts;
+    this.is_boss = is_boss;
+    this.introduction = null;
+  }
+  get_status() {
+    return `${C_HEROE}${this.name}${RESET} - HP: ${C_ARTIFACT}${this.hp}${RESET}/${C_HEROE}${this.hp_max}${RESET}`;
+  }
+}
+
+class Boss_1 extends Enemy {
+  constructor() {
+    super("Isak_90", 350, 350, 300, 300, 25, 10, 3, 500, 300, 100, [MenuRolloMixto, MenuFritaten], 100, [ManoDeMidas, BastonDeAghanim], true);
+    this.skills = [new OracionEspectral(), new EraTanFacil(), new IsakAplasta()];
+    this.introduction = `\n${C_BOSS}${this.name}${RESET}: ${C_ENEMIGO}'¡Bienvenido a la mansion de casper! ¡Aqui se termina tu camino!'${RESET}`;
+  }
+}
+
+class Boss_2 extends Enemy {
+  constructor() {
+    super("Capitan Kirameki", 550, 550, 500, 500, 35, 25, 5, 800, 500, 100, [MenuRolloMixto, MenuFritaten], 100, [TartaShawarma, TrajeZeta], true);
+    this.skills = [new YameteKudasai(), new ZokusheiShokan(), new VoyASerElReyDeLosPiratas()];
+    this.introduction = `\n${C_BOSS}${this.name}${RESET}: ${C_ENEMIGO}'Tienes valor para enfrentar al capitan BlackDicku, ¡muestrame hasta donde llega tu voluntad!'${RESET}`;
+  }
+}
+
+class FinalBoss extends Enemy {
+  constructor() {
+    super("Pepeda, El Sultan", 1000, 1000, 700, 700, 50, 35, 13, 2000, 2000, 100, [MenuRolloMixto, MenuFritaten], 100, [GranNispero, FiguraStandCrazyDiamond], true);
+    this.skills = [new PorlaPaz(), new GiroFuego(), new CabelloCejil(), new LosMilYUnKebab()];
+    this.introduction = `\n${C_BOSS}${this.name}${RESET}: ${C_ENEMIGO}'Conque tu eres quien que esta causando problemas en mis dominios, en el pasado eras como mi hermano, pero hoy no puedo dejarte continuar.¡Por la paz!'${RESET}`;
+  }
+}
+
+const ENEMIES_GENERIC = [
+  { name: "Radnes, Haki Teorico", hp: 100, hp_max: 100, sp: 100, sp_max: 100, attack: 30, defense: 1, level: 5, experience: 500, loot_item_chance: 0.5, gold: 100, loot_items: [MenuRolloMixto], loot_artifact_chance: 0.3, loot_artifacts: [PorroDeLasTeorias, CaretaDePepeda] },
+  { name: "Gordrim, El Exiliado", hp: 200, hp_max: 200, sp: 50, sp_max: 50, attack: 40, defense: 10, level: 5, experience: 1000, loot_item_chance: 0.5, gold: 250, loot_items: [MenuFritaten], loot_artifact_chance: 0.3, loot_artifacts: [PaqueteDeTabaco, CalcetinSucio] },
+  { name: "Voralzuki, Disformidad Garrota", hp: 300, hp_max: 300, sp: 200, sp_max: 200, attack: 60, defense: 30, level: 5, experience: 2000, loot_item_chance: 0.5, gold: 500, loot_items: [MenuRolloMixto, MenuFritaten], loot_artifact_chance: 0.3, loot_artifacts: [LlaveEspada, PiedraBruja] }
+];
+
+const ENEMIES_CHAPTER_1 = [
+  { name: "Garrota", hp: 30, hp_max: 30, sp: 20, sp_max: 20, attack: 16, defense: 2, level: 1, experience: 50, gold: 10, loot_item_chance: 0.3, loot_items: [Fricandela], loot_artifact_chance: 0.1, loot_artifacts: [PiedraBruja] },
+  { name: "Lanero", hp: 50, hp_max: 50, sp: 30, sp_max: 30, attack: 18, defense: 5, level: 2, experience: 60, gold: 20, loot_item_chance: 0.3, loot_items: [Mexicano], loot_artifact_chance: 0.1, loot_artifacts: [AcreditacionMLP] },
+  { name: "Miembro de Mulas", hp: 80, hp_max: 80, sp: 40, sp_max: 40, attack: 20, defense: 7, level: 3, experience: 80, gold: 30, loot_item_chance: 0.3, loot_items: [EstrellaLevante], loot_artifact_chance: 0.1, loot_artifacts: [RedDeVoley] },
+  { name: "Dotero", hp: 40, hp_max: 40, sp: 50, sp_max: 50, attack: 17, defense: 8, level: 4, experience: 100, gold: 50, loot_item_chance: 0.3, loot_items: [Guldendraak], loot_artifact_chance: 0.1, loot_artifacts: [ManoDeMidas] }
+];
+
+const ENEMIES_CHAPTER_2 = [
+  { name: "Buggy", hp: 100, hp_max: 100, sp: 60, sp_max: 60, attack: 20, defense: 15, level: 4, experience: 100, gold: 70, loot_item_chance: 0.3, loot_items: [Guldendraak], loot_artifact_chance: 0.1, loot_artifacts: [TomoDeOnePiece] },
+  { name: "Hans", hp: 120, hp_max: 120, sp: 70, sp_max: 70, attack: 25, defense: 15, level: 4, experience: 120, gold: 60, loot_item_chance: 0.3, loot_items: [EstrellaLevante], loot_artifact_chance: 0.1, loot_artifacts: [DjinnDeAgua, DjinnDeFuego, DjinnDeTierra, DjinnDeViento] },
+  { name: "Joseph Joestar", hp: 140, hp_max: 140, sp: 80, sp_max: 80, attack: 32, defense: 18, level: 4, experience: 170, gold: 100, loot_item_chance: 0.3, loot_items: [Mexicano], loot_artifact_chance: 0.1, loot_artifacts: [Clackers] },
+  { name: "Izuku Midoriya", hp: 120, hp_max: 120, sp: 80, sp_max: 80, attack: 29, defense: 14, level: 4, experience: 140, gold: 90, loot_item_chance: 0.3, loot_items: [Fricandela], loot_artifact_chance: 0.1, loot_artifacts: [TrajeZeta] }
+];
+
+const ENEMIES_CHAPTER_3 = [
+  { name: "Hiroshi", hp: 160, hp_max: 160, sp: 100, sp_max: 100, attack: 33, defense: 20, level: 4, experience: 140, gold: 140, loot_item_chance: 0.3, loot_items: [Mexicano], loot_artifact_chance: 0.1, loot_artifacts: [CalcetinSucio] },
+  { name: "Josuke Higashikata", hp: 200, hp_max: 200, sp: 100, sp_max: 100, attack: 38, defense: 24, level: 4, experience: 180, gold: 100, loot_item_chance: 0.3, loot_items: [Guldendraak], loot_artifact_chance: 0.1, loot_artifacts: [FiguraStandCrazyDiamond] },
+  { name: "Mascota Rollo de Kebab", hp: 240, hp_max: 240, sp: 80, sp_max: 80, attack: 40, defense: 24, level: 4, experience: 220, gold: 120, loot_item_chance: 0.3, loot_items: [MenuRolloMixto], loot_artifact_chance: 0.1, loot_artifacts: [TartaShawarma] },
+  { name: "Ojala_Pepeda", hp: 340, hp_max: 340, sp: 80, sp_max: 80, attack: 44, defense: 30, level: 4, experience: 250, gold: 150, loot_item_chance: 0.3, loot_items: [MenuFritaten], loot_artifact_chance: 0.1, loot_artifacts: [CaretaDePepeda, GranNispero] }
+];
+
+/* =========================================================
+   6. COMBATE (combat.py)
+   ========================================================= */
+async function flushPendingMessages(char) {
+  while (char.pending_messages && char.pending_messages.length > 0) {
+    const msg = char.pending_messages.shift();
+    await imprimir_texto(msg);
+  }
+}
+
+async function combat(player, enemy) {
+  await imprimir_texto(`¡Un ${C_ENEMIGO}${enemy.name}${RESET} aparece!`);
+  let turn = 0;
+  const original_attack = player.attack;
+  const original_defense = player.defense;
+  const original_hp_max = player.hp_max;
+  const original_sp_max = player.sp_max;
+  const enemy_original_defense = enemy.defense;
+
+  for (const skill of player.skills) {
+    skill.passive_triggered = false;
+  }
+
+  for (const artifact of player.artifacts) {
+    if (!enemy.is_alive()) break;
+    if (artifact.active_once) continue;
+    if (artifact.trigger_mode === "combat_start") {
+      artifact.triggered = false;
+      const message = artifact.on_combat_start(player, enemy);
+      if (message) await imprimir_texto(message);
+    }
+  }
+
+  while (player.is_alive() && enemy.is_alive()) {
+    turn += 1;
+    enemy.defense = enemy_original_defense;
+
+    for (const artifact of player.artifacts) {
+      if (artifact.active_once) continue;
+      if (artifact.trigger_mode === "turn_start") {
+        const message = artifact.apply_passive(player, enemy);
+        if (message) await imprimir_texto(message);
+      }
+    }
+
+    await imprimir_texto(`\nTurno ${turn}`);
+    await imprimir_texto(player.get_status());
+    await imprimir_texto(enemy.get_status());
+    updateHUD();
+
+    let fled = false;
+
+    for (const artifact of player.artifacts) {
+      if (artifact.active_once) continue;
+      if (artifact.trigger_mode !== "passive") continue;
+      const message = artifact.apply_passive(player, enemy);
+      if (message) await imprimir_texto(message);
+    }
+
+    for (const skill of player.skills) {
+      if (!skill.is_passive) continue;
+      if (skill.passive_once && skill.passive_triggered) continue;
+      const message = skill.passive_effect(player, enemy);
+      if (message) await imprimir_texto(message);
+      skill.passive_triggered = true;
+    }
+
+    if (player.lose_turn) {
+      await imprimir_texto(`${C_HEROE}${player.name} no puede actuar.${RESET}`);
+      player.lose_turn = false;
+    } else {
+      while (true) {
+        const action = await askOptions([
+          { key: "1", label: "Atacar", value: "1" },
+          { key: "2", label: "Usar una habilidad", value: "2" },
+          { key: "3", label: "Usar objeto", value: "3" },
+          { key: "4", label: "Huir", value: "4" }
+        ]);
+
+        if (action === "1") {
+          const damage = Math.max(0, player.attack - enemy.defense);
+          enemy.take_damage(damage);
+          await imprimir_texto(`${C_HEROE}${player.name}${RESET} ataca a ${C_ENEMIGO}${enemy.name}${RESET} y causa ${C_ENEMIGO}${damage}${RESET} de daño.`);
+
+          for (const artifact of player.artifacts) {
+            if (artifact.active_once || artifact.trigger_mode !== "attack") continue;
+            const message = artifact.apply_passive(player, enemy);
+            if (message) await imprimir_texto(message);
+          }
+          break;
+        } else if (action === "2") {
+          const available_skills = player.get_available_skills();
+          if (available_skills.length === 0) {
+            await imprimir_texto("No tienes ninguna habilidad activa disponible todavía.");
+            continue;
+          }
+
+          await imprimir_texto("0. Volver");
+          const skillOpts = [{ key: "0", label: "Volver", value: "0" }];
+          for (let i = 0; i < available_skills.length; i++) {
+            const sk = available_skills[i];
+            const status = sk.get_status_label(turn, player);
+            await imprimir_texto(`${C_SKILL}${i + 1}. ${sk.name} (SP: ${sk.sp_cost}) - ${status}${RESET}`);
+            skillOpts.push({
+              key: String(i + 1),
+              label: `${sk.name} (SP: ${sk.sp_cost}) - ${stripTags(status)}`,
+              value: String(i + 1)
+            });
+          }
+
+          const sChoice = parseInt(await askOptions(skillOpts), 10) - 1;
+          if (sChoice === -1) continue;
+
+          const skill = available_skills[sChoice];
+          if (player.sp < skill.sp_cost) {
+            await imprimir_texto(`${C_ENEMIGO}No tienes suficiente SP.${RESET}`);
+          } else if (turn - skill.last_used < skill.cooldown) {
+            const turns_left = skill.cooldown - (turn - skill.last_used);
+            await imprimir_texto(`${C_SKILL}${skill.name}${RESET} no está lista. Faltan ${C_SKILL}${turns_left}${RESET} turnos.`);
+          } else {
+            player.sp -= skill.sp_cost;
+            skill.last_used = turn;
+            await imprimir_texto(skill.effect(player, enemy));
+            if (player.fled) {
+              fled = true;
+              player.fled = false;
+            }
+            break;
+          }
+        } else if (action === "3") {
+          if (player.inventory.length === 0) {
+            await imprimir_texto(`${C_ENEMIGO}No tienes ningún objeto en el inventario.${RESET}`);
+            continue;
+          }
+          const grouped = summarize_inventory(player.inventory);
+          await imprimir_texto("0. Volver");
+          const itemOpts = [{ key: "0", label: "Volver", value: "0" }];
+          for (let i = 0; i < grouped.length; i++) {
+            const [name, count] = grouped[i];
+            await imprimir_texto(`${C_ITEM}${i + 1}. ${name} x${count}${RESET}`);
+            itemOpts.push({ key: String(i + 1), label: `${name} x${count}`, value: String(i + 1) });
+          }
+
+          const iChoice = parseInt(await askOptions(itemOpts), 10) - 1;
+          if (iChoice === -1) continue;
+
+          const item = get_item_by_display_index(player.inventory, iChoice + 1);
+          if (!item) continue;
+          await imprimir_texto(item.use(player));
+          const idx = player.inventory.indexOf(item);
+          if (idx !== -1) player.inventory.splice(idx, 1);
+          break;
+        } else if (action === "4") {
+          if (enemy.is_boss) {
+            await imprimir_texto(`${C_ENEMIGO}¡No puedes huir de esta batalla! ${enemy.name} te bloquea la salida.${RESET}`);
+            break;
+          }
+          if (choice([true, false])) {
+            await imprimir_texto(`${C_HEROE}${player.name}${RESET} huye del combate.`);
+            fled = true;
+            break;
+          } else {
+            await imprimir_texto(`${C_HEROE}${player.name}${RESET} no puede huir.${RESET}`);
+            break;
+          }
+        }
+      }
+    }
+
+    if (fled) break;
+
+    if (enemy.is_alive()) {
+      if (enemy.lose_turn) {
+        await imprimir_texto(`${C_ENEMIGO}${enemy.name}${RESET} no puede actuar.`);
+        enemy.lose_turn = false;
+      } else {
+        const hp_percent = enemy.hp / enemy.hp_max;
+        const available_skills = enemy.skills.filter(sk => {
+          if (sk.used_once && sk.skill_triggered) return false;
+          if (hp_percent > sk.hp_threshold) return false;
+          if (enemy.sp < sk.sp_cost) return false;
+          if (turn - sk.last_used < sk.cooldown) return false;
+          if (sk.requires_buff && !enemy.active_buffs.has(sk.requires_buff)) return false;
+          return true;
+        });
+
+        if (available_skills.length > 0) {
+          const skill = available_skills.reduce((a, b) => (b.priority > a.priority ? b : a));
+          enemy.sp -= skill.sp_cost;
+          skill.last_used = turn;
+          if (skill.used_once) skill.skill_triggered = true;
+          player.pending_messages = [];
+          await imprimir_texto(skill.effect(enemy, player));
+          await flushPendingMessages(player);
+        } else {
+          const damage = Math.max(0, enemy.attack - player.defense);
+          player.pending_messages = [];
+          player.take_damage(damage);
+          await imprimir_texto(`${C_ENEMIGO}${enemy.name}${RESET} ataca a ${C_HEROE}${player.name}${RESET} y causa ${C_ENEMIGO}${damage}${RESET} de daño.`);
+          await flushPendingMessages(player);
+        }
+      }
+    }
+
+    if (!player.is_alive()) {
+      for (const artifact of player.artifacts) {
+        if (artifact.trigger_mode === "on_death") {
+          const message = artifact.apply_passive(player, enemy);
+          if (message) await imprimir_texto(message);
+        }
+      }
+    }
+  }
+
+  player.attack = original_attack;
+  player.defense = original_defense;
+  player.hp_max = original_hp_max;
+  player.hp = Math.min(player.hp, player.hp_max);
+  player.sp_max = original_sp_max;
+  player.sp = Math.min(player.sp, player.sp_max);
+
+  for (const skill of player.skills) {
+    skill.last_used = -skill.cooldown;
+  }
+
+  if (!player.is_alive()) {
+    await imprimir_texto(`${C_BOSS}${player.name}${RESET} ha sido derrotado.`);
+  } else if (!enemy.is_alive()) {
+    const gold_gain = Math.trunc(enemy.gold * (player.gold_multiplier || 1));
+    player.gold += gold_gain;
+    await imprimir_texto(`${C_HEROE}${player.name}${RESET} obtiene ${C_ITEM}${gold_gain}${RESET} de oro.`);
+
+    let got_loot = false;
+    if (enemy.loot_artifacts && enemy.loot_artifacts.length > 0 && Math.random() < enemy.loot_artifact_chance) {
+      const ownedNames = new Set(player.artifacts.map(a => a.name));
+      const possible = enemy.loot_artifacts.filter(A => {
+        const inst = typeof A === "function" ? new A() : A;
+        return !ownedNames.has(inst.name);
+      });
+      if (possible.length > 0) {
+        const chosen = choice(possible);
+        const artifact = typeof chosen === "function" ? new chosen() : chosen;
+        await imprimir_texto(player.add_artifact(artifact));
+        got_loot = true;
+      }
+    }
+
+    if (!got_loot && enemy.loot_items && enemy.loot_items.length > 0 && Math.random() < enemy.loot_item_chance) {
+      const chosen = choice(enemy.loot_items);
+      const item = typeof chosen === "function" ? new chosen() : chosen;
+      await imprimir_texto(player.add_item(item));
+    }
+
+    const exp_gain = Math.trunc(enemy.experience * (player.experience_multiplier || 1));
+    player.experience += exp_gain;
+    await imprimir_texto(`${C_HEROE}${player.name}${RESET} ha derrotado a ${C_ENEMIGO}${enemy.name}${RESET} y gana ${C_ITEM}${exp_gain}${RESET} de experiencia.`);
+    const lvlMessages = player.check_level_up();
+    if (lvlMessages) {
+      for (const m of lvlMessages) {
+        await imprimir_texto(m);
+      }
+    }
+  }
+  updateHUD();
+}
+
+/* =========================================================
+   7. MAZMORRA Y TIENDA (dungeon.py)
+   ========================================================= */
+class DungeonNode {
+  constructor(event_type, node_id) {
+    this.event_type = event_type;
+    this.node_id = node_id;
+    this.children = [];
+  }
+  add_child(node) {
+    this.children.push(node);
+  }
+}
+
+function random_event_type() {
+  return weightedChoice(["Enemigo", "Evento", "Cofre"], [60, 30, 10]);
+}
+
+function build_dungeon() {
+  const start = new DungeonNode("start", "n0");
+  const combat_1 = new DungeonNode("Enemigo", "n1");
+  const combat_2 = new DungeonNode("Enemigo", "n2");
+  start.add_child(combat_1);
+  start.add_child(combat_2);
+
+  const nodo_a = new DungeonNode(random_event_type(), "n3");
+  const nodo_b = new DungeonNode(random_event_type(), "n4");
+  const nodo_c = new DungeonNode(random_event_type(), "n5");
+  const nodo_d = new DungeonNode(random_event_type(), "n6");
+  combat_1.add_child(nodo_a); combat_1.add_child(nodo_b);
+  combat_2.add_child(nodo_c); combat_2.add_child(nodo_d);
+
+  const nodo_e = new DungeonNode(random_event_type(), "n7");
+  const nodo_f = new DungeonNode(random_event_type(), "n8");
+  const nodo_g = new DungeonNode(random_event_type(), "n9");
+  const nodo_h = new DungeonNode(random_event_type(), "n10");
+  const nodo_i = new DungeonNode(random_event_type(), "n11");
+  nodo_a.add_child(nodo_e); nodo_a.add_child(nodo_f);
+  nodo_b.add_child(nodo_f); nodo_b.add_child(nodo_g);
+  nodo_c.add_child(nodo_g); nodo_c.add_child(nodo_h);
+  nodo_d.add_child(nodo_h); nodo_d.add_child(nodo_i);
+
+  const chest_1 = new DungeonNode("Cofre", "n12");
+  const chest_2 = new DungeonNode("Cofre", "n13");
+  const chest_3 = new DungeonNode("Cofre", "n14");
+  const chest_4 = new DungeonNode("Cofre", "n15");
+  nodo_e.add_child(chest_1);
+  nodo_f.add_child(chest_1); nodo_f.add_child(chest_2);
+  nodo_g.add_child(chest_2); nodo_g.add_child(chest_3);
+  nodo_h.add_child(chest_3); nodo_h.add_child(chest_4);
+  nodo_i.add_child(chest_4);
+
+  const nodo_j = new DungeonNode(random_event_type(), "n16");
+  const nodo_k = new DungeonNode(random_event_type(), "n17");
+  const nodo_l = new DungeonNode(random_event_type(), "n18");
+  const nodo_m = new DungeonNode(random_event_type(), "n19");
+  const nodo_n = new DungeonNode(random_event_type(), "n20");
+  chest_1.add_child(nodo_j); chest_1.add_child(nodo_k);
+  chest_2.add_child(nodo_k); chest_2.add_child(nodo_l);
+  chest_3.add_child(nodo_l); chest_3.add_child(nodo_m);
+  chest_4.add_child(nodo_m); chest_4.add_child(nodo_n);
+
+  const nodo_o = new DungeonNode(random_event_type(), "n21");
+  const nodo_p = new DungeonNode(random_event_type(), "n22");
+  const nodo_q = new DungeonNode(random_event_type(), "n23");
+  const nodo_r = new DungeonNode(random_event_type(), "n24");
+  nodo_j.add_child(nodo_o);
+  nodo_k.add_child(nodo_o); nodo_k.add_child(nodo_p);
+  nodo_l.add_child(nodo_p); nodo_l.add_child(nodo_q);
+  nodo_m.add_child(nodo_q); nodo_m.add_child(nodo_r);
+  nodo_n.add_child(nodo_r);
+
+  const nodo_s = new DungeonNode(random_event_type(), "n25");
+  const nodo_t = new DungeonNode(random_event_type(), "n26");
+  const nodo_u = new DungeonNode(random_event_type(), "n27");
+  const nodo_v = new DungeonNode(random_event_type(), "n28");
+  const nodo_w = new DungeonNode(random_event_type(), "n29");
+  nodo_o.add_child(nodo_s); nodo_o.add_child(nodo_t);
+  nodo_p.add_child(nodo_t); nodo_p.add_child(nodo_u);
+  nodo_q.add_child(nodo_u); nodo_q.add_child(nodo_v);
+  nodo_r.add_child(nodo_v); nodo_r.add_child(nodo_w);
+
+  const rest_1 = new DungeonNode("Descanso", "n30");
+  const rest_2 = new DungeonNode("Descanso", "n31");
+  const rest_3 = new DungeonNode("Descanso", "n32");
+  const rest_4 = new DungeonNode("Descanso", "n33");
+  nodo_s.add_child(rest_1);
+  nodo_t.add_child(rest_1); nodo_t.add_child(rest_2);
+  nodo_u.add_child(rest_2); nodo_u.add_child(rest_3);
+  nodo_v.add_child(rest_3); nodo_v.add_child(rest_4);
+  nodo_w.add_child(rest_4);
+
+  const boss = new DungeonNode("Jefe", "n34");
+  rest_1.add_child(boss); rest_2.add_child(boss);
+  rest_3.add_child(boss); rest_4.add_child(boss);
+  return start;
+}
+
+function find_node(root, node_id) {
+  if (root.node_id === node_id) return root;
+  for (const child of root.children) {
+    const found = find_node(child, node_id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function spawn_random_enemy(chapter) {
+  let todos, pesos;
+  if (chapter === 1) {
+    todos = [...ENEMIES_GENERIC, ...ENEMIES_CHAPTER_1];
+    pesos = [15, 2.5, 2.5, 20, 20, 20, 20];
+  } else if (chapter === 2) {
+    todos = [...ENEMIES_GENERIC, ...ENEMIES_CHAPTER_2];
+    pesos = [2.5, 15, 2.5, 20, 20, 20, 20];
+  } else {
+    todos = [...ENEMIES_GENERIC, ...ENEMIES_CHAPTER_3];
+    pesos = [2.5, 2.5, 15, 20, 20, 20, 20];
+  }
+  const d = weightedChoice(todos, pesos);
+  return new Enemy(
+    d.name, d.hp, d.hp_max, d.sp, d.sp_max, d.attack, d.defense,
+    d.level, d.experience, d.gold || 0, d.loot_item_chance || 0,
+    d.loot_items || [], d.loot_artifact_chance || 0, d.loot_artifacts || [], d.is_boss || false
+  );
+}
+
+function build_shop_entries(player) {
+  const item_classes = get_all_items();
+  const artifact_classes = get_all_artifacts();
+  const shop_items = sample(item_classes, 3).map(Cls => new Cls());
+  const ownedNames = new Set(player.artifacts.map(a => a.name));
+  const available_artifacts = artifact_classes.filter(Cls => !ownedNames.has(new Cls().name));
+  const shop_artifacts = sample(available_artifacts, 3).map(Cls => new Cls());
+  return [
+    ...shop_items.map(it => ["item", it]),
+    ...shop_artifacts.map(art => ["artifact", art])
+  ];
+}
+
+async function open_shop(player) {
+  printDivider();
+  await imprimir_texto(`¡Bienvenido a la tienda de ${C_BOSS}Valeria${RESET}!`);
+  await imprimir_texto(`Tu oro actual: ${C_ITEM}${player.gold}${RESET}`);
+  printDivider();
+
+  const shop_entries = build_shop_entries(player);
+
+  while (true) {
+    if (shop_entries.length === 0) {
+      await imprimir_texto("No hay artículos disponibles en la tienda en este momento.");
+      return;
+    }
+
+    await imprimir_texto("ARTÍCULOS DISPONIBLES:");
+    const opts = [{ key: "0", label: "Salir de la tienda", value: "0" }];
+    for (let i = 0; i < shop_entries.length; i++) {
+      const [kind, obj] = shop_entries[i];
+      await imprimir_texto(`  ${C_ARTIFACT}${i + 1}. ${obj.name}${RESET} - ${C_ITEM}${obj.price} oro${RESET} (${kind})`);
+      opts.push({
+        key: String(i + 1),
+        label: `${obj.name} - ${obj.price} oro (${kind})`,
+        value: String(i + 1)
+      });
+    }
+    await imprimir_texto("\n  0. Salir de la tienda");
+    printDivider();
+
+    const choiceNum = parseInt(await askOptions(opts), 10);
+    if (choiceNum === 0) {
+      await imprimir_texto(`\n${C_HEROE}${player.name}${RESET} se va de la tienda.`);
+      break;
+    }
+
+    const index = choiceNum - 1;
+    if (index >= 0 && index < shop_entries.length) {
+      const [kind, obj] = shop_entries[index];
+      const price = obj.price || 0;
+      if (player.gold >= price) {
+        if (kind === "item") {
+          player.gold -= price;
+          const ItemCls = obj.constructor;
+          player.add_item(new ItemCls());
+          await imprimir_texto(`\n${C_HEROE}${player.name}${RESET} compra ${C_ITEM}${obj.name}${RESET} por ${C_ITEM}${price} oro${RESET}. Oro restante: ${C_ITEM}${player.gold}${RESET}\n`);
+        } else {
+          player.gold -= price;
+          const added_message = player.add_artifact(obj);
+          await imprimir_texto(added_message);
+          await imprimir_texto(`\n${C_HEROE}${player.name}${RESET} compra ${C_ARTIFACT}${obj.name}${RESET} por ${C_ITEM}${price} oro${RESET}. Oro restante: ${C_ITEM}${player.gold}${RESET}\n`);
+          shop_entries.splice(index, 1);
+        }
+      } else {
+        await imprimir_texto(`\n✗ No tienes suficiente oro. Necesitas ${C_ITEM}${price}${RESET} y tienes ${C_ITEM}${player.gold}${RESET}\n`);
+      }
+    }
+    updateHUD();
+  }
+}
+
+async function run_node(player, node, chapter) {
+  if (node.event_type === "Enemigo") {
+    const enemy = spawn_random_enemy(chapter);
+    await combat(player, enemy);
+  } else if (node.event_type === "Cofre") {
+    const ownedNames = new Set(player.artifacts.map(a => a.name));
+    const available = get_all_artifacts().filter(Cls => !ownedNames.has(new Cls().name));
+    if (available.length === 0) {
+      await imprimir_texto(`${C_HEROE}${player.name}${RESET} encuentra un cofre vacío (ya posees todos los artefactos disponibles).`);
+    } else {
+      const ACls = choice(available);
+      await imprimir_texto(player.add_artifact(new ACls()));
+    }
+  } else if (node.event_type === "Evento") {
+    if (Math.random() < 0.80) {
+      const ev = choice(["Tienda", "Item", "Artefacto"]);
+      if (ev === "Tienda") {
+        await open_shop(player);
+      } else if (ev === "Item") {
+        const ICls = choice([EstrellaLevante, Guldendraak, Fricandela, Mexicano, MenuRolloMixto, MenuFritaten]);
+        const item = new ICls();
+        player.add_item(item);
+        await imprimir_texto(`${C_HEROE}${player.name}${RESET} ha encontrado un bar abandonado y descubre ${C_ITEM}${item.name}${RESET} en una mochila de Glovo tirada.`);
+      } else {
+        const ownedNames = new Set(player.artifacts.map(a => a.name));
+        const available = get_all_artifacts().filter(Cls => !ownedNames.has(new Cls().name));
+        if (available.length === 0) {
+          await imprimir_texto(`${C_HEROE}${player.name}${RESET} encuentras al legendario Siko que sonriendo te ofrece un artefacto, pero ya posees todos los que ofrece.`);
+        } else {
+          const ACls = choice(available);
+          const artifact = new ACls();
+          await imprimir_texto(`${C_HEROE}${player.name}${RESET} encuentras al legendario Siko que sonriendo te ofrece: ${C_ARTIFACT}${artifact.name}${RESET}`);
+          await imprimir_texto(player.add_artifact(artifact));
+        }
+      }
+    } else {
+      const ev = choice(["Trampa", "Enemigo"]);
+      if (ev === "Trampa") {
+        const damage = randint(10, 30);
+        player.pending_messages = [];
+        player.take_damage(damage);
+        await imprimir_texto(`${C_HEROE}${player.name}${RESET} ha caído en una trampa y recibe ${C_ENEMIGO}${damage}${RESET} de daño.`);
+        await flushPendingMessages(player);
+      } else {
+        const enemy = spawn_random_enemy(chapter);
+        await combat(player, enemy);
+      }
+    }
+  } else if (node.event_type === "Jefe") {
+    let boss;
+    if (chapter === 1) boss = new Boss_1();
+    else if (chapter === 2) boss = new Boss_2();
+    else boss = new FinalBoss();
+    if (boss.introduction) await imprimir_texto(boss.introduction);
+    await combat(player, boss);
+  } else if (node.event_type === "Descanso") {
+    player.heal(player.hp_max);
+    player.sp = player.sp_max;
+    await imprimir_texto(`${C_HEROE}${player.name}${RESET} se recuesta en un campamento abandonado y recupera todos sus hp y sp`);
+  }
+  updateHUD();
+}
+
+/* =========================================================
+   8. GUARDADO EN NAVEGADOR (storage.py -> localStorage)
+   ========================================================= */
+const SAVE_KEY = "slay_the_kebab_save_v1";
+
+const CHAR_CLASSES = {
+  Matabufalez, Yuri, Freakmaster, Sami, Ana
+};
+
+const ITEM_BY_NAME = {};
+get_all_items().forEach(Cls => { ITEM_BY_NAME[new Cls().name] = Cls; });
+
+const ARTIFACT_BY_NAME = {};
+get_all_artifacts().forEach(Cls => { ARTIFACT_BY_NAME[new Cls().name] = Cls; });
+
+const SKILL_BY_NAME = {};
+[...SKILLS_PLAYER, HallDeLaFama, CorteBienFiludo, MadreDeGatos, EraTanFacil, PorlaPaz, Meteoro, JuicioFinal, Thor, Boreal, MeVoyAFumar].forEach(Cls => {
+  SKILL_BY_NAME[new Cls().name] = Cls;
+});
+
+function save_player(player) {
+  const data = {
+    name: player.name,
+    char_class: player.char_class,
+    hp: player.hp,
+    hp_max: player.hp_max,
+    sp: player.sp,
+    sp_max: player.sp_max,
+    attack: player.attack,
+    defense: player.defense,
+    level: player.level,
+    experience: player.experience,
+    gold: player.gold,
+    chapter: player.chapter,
+    current_node_id: player.current_node_id,
+    experience_multiplier: player.experience_multiplier,
+    gold_multiplier: player.gold_multiplier,
+    inventory: player.inventory.map(i => i.name),
+    artifacts: player.artifacts.map(a => ({ name: a.name, used: !!a.used, revives_on_death: !!a.revives_on_death })),
+    skills: player.skills.map(s => ({ name: s.name, level_required: s.level_required }))
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function has_saved_players() {
+  return localStorage.getItem(SAVE_KEY) !== null;
+}
+
+function load_player() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    const Cls = CHAR_CLASSES[data.char_class] || Matabufalez;
+    const player = new Cls();
+    player.hp = data.hp;
+    player.hp_max = data.hp_max;
+    player.sp = data.sp;
+    player.sp_max = data.sp_max;
+    player.attack = data.attack;
+    player.defense = data.defense;
+    player.level = data.level;
+    player.experience = data.experience;
+    player.gold = data.gold ?? 0;
+    player.chapter = data.chapter;
+    player.current_node_id = data.current_node_id;
+    player.experience_multiplier = data.experience_multiplier || 1;
+    player.gold_multiplier = data.gold_multiplier || 1;
+
+    player.inventory = (data.inventory || []).map(n => ITEM_BY_NAME[n] ? new ITEM_BY_NAME[n]() : null).filter(Boolean);
+    player.artifacts = (data.artifacts || []).map(aObj => {
+      const ACls = ARTIFACT_BY_NAME[aObj.name];
+      if (!ACls) return null;
+      const inst = new ACls();
+      if (aObj.used !== undefined) inst.used = aObj.used;
+      if (aObj.revives_on_death !== undefined) inst.revives_on_death = aObj.revives_on_death;
+      return inst;
+    }).filter(Boolean);
+
+    if (data.skills && data.skills.length > 0) {
+      player.skills = data.skills.map(sObj => {
+        const SCls = SKILL_BY_NAME[sObj.name];
+        if (!SCls) return null;
+        const sk = new SCls();
+        sk.level_required = sObj.level_required;
+        return sk;
+      }).filter(Boolean);
+    }
+    return player;
+  } catch (e) {
+    console.error("Error cargando partida:", e);
+    return null;
+  }
+}
+
+function delete_saved_game() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+/* =========================================================
+   9. FLUJO PRINCIPAL DEL JUEGO (main.py)
+   ========================================================= */
+let activePlayer = null;
+
+function updateHUD() {
+  const hud = document.getElementById("hud");
+  if (!activePlayer) {
+    hud.style.display = "none";
+    return;
+  }
+  hud.style.display = "grid";
+  document.getElementById("hud-name").textContent = activePlayer.name;
+  document.getElementById("hud-lvl").textContent = activePlayer.level;
+  document.getElementById("hud-chap").textContent = activePlayer.chapter;
+  document.getElementById("hud-node").textContent = activePlayer.current_node_id;
+  document.getElementById("hud-hp").textContent = `${activePlayer.hp}/${activePlayer.hp_max}`;
+  document.getElementById("hud-sp").textContent = `${activePlayer.sp}/${activePlayer.sp_max}`;
+  document.getElementById("hud-atk").textContent = activePlayer.attack;
+  document.getElementById("hud-def").textContent = activePlayer.defense;
+  document.getElementById("hud-exp").textContent = `${activePlayer.experience}/${activePlayer.level * 100}`;
+  document.getElementById("hud-gold").textContent = activePlayer.gold;
+
+  const hpPct = Math.max(0, Math.min(100, (activePlayer.hp / activePlayer.hp_max) * 100));
+  const spPct = Math.max(0, Math.min(100, (activePlayer.sp / activePlayer.sp_max) * 100));
+  document.getElementById("bar-hp").style.width = `${hpPct}%`;
+  document.getElementById("bar-sp").style.width = `${spPct}%`;
+}
+
+async function intro_screen() {
+  mostrar_titulo_gigante("Slay the Kebab", C_SKILL);
+  await imprimir_texto("En un mundo donde la bondad ha desaparecido y el mayor ejemplo de virtud se volvio un tirano...", 0.04);
+  await imprimir_texto("Te levantas resignado, pues ya no aguantas mas la represion.", 0.04);
+  await imprimir_texto("Justo cuando esa idea asoma en tu cabeza una luz resplandeciente ilumina tu habitacion, en ella aparece una diosa", 0.04);
+  await imprimir_texto(`${C_BOSS}Ana, reencarnacion de Freya:${RESET} Solo tu, amigo de ${C_BOSS}Pepeda, el Sultan${RESET}, puedes acabar con esta pesadilla.`, 0.04);
+}
+
+async function select_player() {
+  await intro_screen();
+  await imprimir_texto(`${C_BOSS}Ana, Reencarnacion de Freya${RESET}: ¿Quien eres tu?`);
+  await imprimir_texto(`${C_HEROE}1. Matabufalez, El Papucheitor${RESET}`);
+  await imprimir_texto(`${C_HEROE}2. Freakmaster, El Tecnodruida${RESET}`);
+  await imprimir_texto(`${C_HEROE}3. JayC, The Chillman${RESET}`);
+  await imprimir_texto(`${C_HEROE}4. Sami, El HardcoreGuy${RESET}`);
+
+  while (true) {
+    const ch = await askOptions([
+      { key: "1", label: "Matabufalez, El Papucheitor", value: "1" },
+      { key: "2", label: "Freakmaster, El Tecnodruida", value: "2" },
+      { key: "3", label: "JayC, The Chillman", value: "3" },
+      { key: "4", label: "Sami, El HardcoreGuy", value: "4" }
+    ], true);
+
+    if (ch === "1") return new Matabufalez();
+    if (ch === "2") return new Freakmaster();
+    if (ch === "3") return new Yuri();
+    if (ch === "4") return new Sami();
+    if (ch === "210522") return new Ana();
+    await imprimir_texto(`${C_ENEMIGO}Opción no válida.${RESET}`);
+  }
+}
+
+async function show_epilogue(player) {
+  printDivider();
+  mostrar_titulo_gigante("EPILOGO", C_BOSS);
+  printDivider();
+  await imprimir_texto(player.get_epilogue());
+}
+
+async function show_credits() {
+  printDivider();
+  mostrar_titulo_gigante("Slay The Kebab", C_ARTIFACT);
+  printDivider();
+  await imprimir_texto("Un juego creado con cariño y aprecio, espero que lo hayais disfrutado");
+  await imprimir_texto("\n¡Gracias por jugar!");
+}
+
+async function main() {
+  while (true) {
+    activePlayer = null;
+    updateHUD();
+    mostrar_titulo_gigante("PAPADAS GAMES", C_BOSS);
+    await imprimir_texto(`${C_BOSS}Presenta${RESET}`);
+
+    let player;
+    if (has_saved_players()) {
+      await imprimir_texto("¿Quieres continuar una partida existente?\n1. Nueva partida\n2. Continuar partida");
+      const ch = await askOptions([
+        { key: "1", label: "Nueva partida", value: "1" },
+        { key: "2", label: "Continuar partida", value: "2" }
+      ]);
+      if (ch === "2") {
+        player = load_player();
+        if (player) {
+          await imprimir_texto(`¡Bienvenido de nuevo, ${C_HEROE}${player.name}${RESET}! Continuemos tu aventura.`);
+        } else {
+          player = await select_player();
+          await imprimir_texto(`¡Bienvenido, ${C_HEROE}${player.name}${RESET}! Tu aventura comienza ahora.`);
+        }
+      } else {
+        delete_saved_game();
+        player = await select_player();
+        await imprimir_texto(`¡Bienvenido, ${C_HEROE}${player.name}${RESET}! Tu aventura comienza ahora.`);
+      }
+    } else {
+      player = await select_player();
+      await imprimir_texto(`¡Bienvenido, ${C_HEROE}${player.name}${RESET}! Tu aventura comienza ahora.`);
+    }
+
+    activePlayer = player;
+    updateHUD();
+
+    let dungeon_root = build_dungeon();
+    let current_node = find_node(dungeon_root, player.current_node_id) || dungeon_root;
+
+    while (player.is_alive()) {
+      await imprimir_texto("\n¿Qué quieres hacer?:");
+      await imprimir_texto("1. Avanzar");
+      await imprimir_texto("2. Ver estado");
+      await imprimir_texto("3. Guardar partida");
+
+      const action = await askOptions([
+        { key: "1", label: "Avanzar", value: "1" },
+        { key: "2", label: "Ver estado", value: "2" },
+        { key: "3", label: "Guardar partida", value: "3" }
+      ]);
+
+      if (action === "1") {
+        if (current_node.children.length > 0) {
+          await imprimir_texto("\n¿Hacia dónde quieres ir?");
+          const pathOpts = [];
+          for (let i = 0; i < current_node.children.length; i++) {
+            const child = current_node.children[i];
+            await imprimir_texto(`${i + 1}. ${child.event_type}`);
+            pathOpts.push({
+              key: String(i + 1),
+              label: `Camino ${i + 1}: ${child.event_type}`,
+              value: String(i)
+            });
+          }
+          const idx = parseInt(await askOptions(pathOpts), 10);
+          current_node = current_node.children[idx];
+          player.current_node_id = current_node.node_id;
+          updateHUD();
+          await run_node(player, current_node, player.chapter);
+        } else {
+          if (player.is_alive()) {
+            if (player.chapter === 3) {
+              await show_epilogue(player);
+              await show_credits();
+              break;
+            } else {
+              player.chapter += 1;
+              await imprimir_texto(`\n${C_SKILL}¡Capítulo ${C_BOSS}${player.chapter - 1}${C_SKILL} completado! Comienza el Capítulo ${C_BOSS}${player.chapter}${C_SKILL}.${RESET}`);
+              dungeon_root = build_dungeon();
+              current_node = find_node(dungeon_root, "n0");
+              player.current_node_id = "n0";
+              updateHUD();
+            }
+          } else {
+            await imprimir_texto(`${C_SISTEMA}Has sido derrotado.${RESET}`);
+          }
+        }
+      } else if (action === "2") {
+        while (true) {
+          await imprimir_texto("\nVer estado:");
+          await imprimir_texto("0. Volver");
+          await imprimir_texto("1. Estadisticas");
+          await imprimir_texto("2. Inventario");
+
+          const sub = await askOptions([
+            { key: "1", label: "Estadísticas", value: "1" },
+            { key: "2", label: "Inventario", value: "2" },
+            { key: "0", label: "Volver", value: "0" }
+          ]);
+
+          if (sub === "0") break;
+          if (sub === "1") {
+            await imprimir_texto(player.get_stats());
+          } else if (sub === "2") {
+            while (true) {
+              await imprimir_texto("\nInventario:");
+              await imprimir_texto("0. Volver");
+              await imprimir_texto("1. Objetos");
+              await imprimir_texto("2. Artefactos");
+
+              const inv_sub = await askOptions([
+                { key: "1", label: "Objetos", value: "1" },
+                { key: "2", label: "Artefactos", value: "2" },
+                { key: "0", label: "Volver", value: "0" }
+              ]);
+
+              if (inv_sub === "0") break;
+              if (inv_sub === "1") {
+                if (player.inventory.length === 0) {
+                  await imprimir_texto("No tienes objetos.");
+                  continue;
+                }
+                while (true) {
+                  const grouped_items = summarize_inventory(player.inventory);
+                  await imprimir_texto("\nTus objetos:");
+                  const opts = [{ key: "0", label: "Volver", value: "0" }];
+                  for (let i = 0; i < grouped_items.length; i++) {
+                    const [name, count] = grouped_items[i];
+                    await imprimir_texto(`${i + 1}. ${C_ITEM}${name}${RESET} x${count}`);
+                    opts.push({ key: String(i + 1), label: `${name} x${count}`, value: String(i + 1) });
+                  }
+                  await imprimir_texto("0. Volver");
+                  const c = parseInt(await askOptions(opts), 10);
+                  if (c === 0) break;
+                  const item = get_item_by_display_index(player.inventory, c);
+                  if (item) {
+                    await imprimir_texto(`\n${C_ITEM}${item.name}${RESET}: ${item.description}\n`);
+                    await askOptions([{ key: "Enter", label: "Volver a la lista de objetos", value: "ok" }]);
+                  }
+                }
+              } else if (inv_sub === "2") {
+                if (player.artifacts.length === 0) {
+                  await imprimir_texto("No tienes artefactos.");
+                  continue;
+                }
+                while (true) {
+                  const grouped_artifacts = summarize_inventory(player.artifacts);
+                  await imprimir_texto("\nTus artefactos:");
+                  const opts = [{ key: "0", label: "Volver", value: "0" }];
+                  for (let i = 0; i < grouped_artifacts.length; i++) {
+                    const [name, count] = grouped_artifacts[i];
+                    await imprimir_texto(`${i + 1}. ${C_ARTIFACT}${name}${RESET} x${count}`);
+                    opts.push({ key: String(i + 1), label: `${name} x${count}`, value: String(i + 1) });
+                  }
+                  await imprimir_texto("0. Volver");
+                  const c = parseInt(await askOptions(opts), 10);
+                  if (c === 0) break;
+                  const art = get_item_by_display_index(player.artifacts, c);
+                  if (art) {
+                    await imprimir_texto(`\n${C_ARTIFACT}${art.name}${RESET}: ${art.description}\n`);
+                    await askOptions([{ key: "Enter", label: "Volver a la lista de artefactos", value: "ok" }]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else if (action === "3") {
+        save_player(player);
+        await imprimir_texto(`${C_SKILL}¡Partida guardada correctamente en el navegador!${RESET}`);
+      }
+    }
+
+    if (player.is_alive()) {
+      await imprimir_texto("\n¡Felicidades por completar tu aventura!");
+    } else {
+      await imprimir_texto("Game Over. Gracias por jugar.");
+    }
+
+    await imprimir_texto("¿Quieres jugar de nuevo? (s/n)");
+    const restart = await askOptions([
+      { key: "s", label: "Sí, jugar de nuevo", value: "s" },
+      { key: "n", label: "No, salir", value: "n" }
+    ]);
+    if (restart !== "s") {
+      await imprimir_texto("¡Hasta la próxima, aventurero!");
+      break;
+    }
+    clearTerminal();
+  }
+}
+
+window.onload = () => {
+  main();
+};
+</script>
+</body>
+</html>
