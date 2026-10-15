@@ -11,7 +11,7 @@ Este juego nace como un reto personal para dominar **Python** de forma autodidac
 
 ## ▶️ Jugar ya
 
-¿Solo quieres jugar y no te interesa el código? Descarga el ejecutable desde [Releases](https://github.com/josedanigarcia-hue/SlayTheKebab/releases/tag/Game) y haz doble clic. Así de fácil, no necesitas tener Python instalado.
+¿Solo quieres jugar y no te interesa el código? Descarga el ejecutable desde [Releases](https://github.com/josedanigarcia-hue/SlayTheKebab/releases/tag/Game) y haz doble clic o ejecútalo en el [Navegador](https://josedanigarcia-hue.github.io/SlayTheKebab/) Así de fácil, no necesitas tener Python instalado.
 
 ## 🧙 Los Héroes
 
